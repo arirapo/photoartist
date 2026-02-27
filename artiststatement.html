@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Artist Statement — Ari Rapo</title>
+  <meta name="description" content="A minimalist artist statement." />
+
+  <link rel="canonical" href="https://example.com/artiststatement.html" />
+
+  <meta property="og:title" content="Artist Statement — Your Name" />
+  <meta property="og:description" content="A minimalist artist statement." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://example.com/artiststatement.html" />
+  <meta property="og:image" content="assets/og.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="stylesheet" href="assets/style.css" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='48'%3E%E2%97%8F%3C/text%3E%3C/svg%3E" />
+</head>
+
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="wrap">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Home">
+        <span class="mark" aria-hidden="true"></span>
+        <strong>Ari Rapo</strong>
+        <span class="sub">— Photoartist / Photodiarist</span>
+      </a>
+
+      <nav aria-label="Primary">
+        <ul class="nav">
+          <li><a href="index.html#work">Work</a></li>
+          <li><a href="index.html#about">About</a></li>
+          <li><a aria-current="page" href="artiststatement.html">Artist Statement</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main" class="statement">
+      <section class="card statement-card" aria-labelledby="statement-title">
+        <p class="tag">● Artist Statement</p>
+
+        <h1 id="statement-title" class="statement-title">Artist Statement</h1>
+
+        <!-- Square “image” (no file needed) -->
+       <figure class="square">
+  <img
+    id="statement-image"
+    src="assets/AS1.jpeg"
+    alt="Photograph from the artist statement series."
+  />
+</figure>
+
+        <div class="statement-text">
+          <p>
+           I photograph in order to remain present.
+I make images to stay with what is unfolding, even when I do not yet know what it is.
+
+
+
+I am drawn to subtle shifts — light changing, surfaces wearing down, moments that resist definition. Imperfection, uncertainty, and incompleteness are not problems to solve, but conditions to work within. Often the images move toward abstraction, not to escape the world, but to approach it differently.
+
+
+          </p>
+          <p>
+My work grows out of attention, repetition, and small variations. I return to familiar places and gestures, allowing chance to enter the process. The body becomes a point of reference, the camera a simple instrument, the landscape an active counterpart. I do not seek control, but attunement.
+          </p>
+          <p>
+Curiosity guides the work.
+I observe, linger, and allow things to remain unresolved.
+
+The image is not an answer.
+It is a place to pause.
+          </p>
+        </div>
+
+        <div class="actions">
+          <a class="btn primary" href="index.html">Back to home</a>
+          <a class="btn" href="index.html#contact">Contact</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <small>© <span id="year">2026</span> Ari Rapo</small>
+      <small class="muted">Static site · Made by Ari Rapo on GitHub Pages</small>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const imageCount = 3; // ← muuta tämä vastaamaan kuvien määrää
+
+    const randomIndex = Math.floor(Math.random() * imageCount) + 1;
+
+    const img = document.getElementById("statement-image");
+
+    if (img) {
+      img.src = `assets/AS${randomIndex}.jpeg`;
+
+      // cache-buster varmuuden vuoksi
+      img.src += `?v=${Date.now()}`;
+    }
+
+  });
+</script>
+</body>
+</html>
