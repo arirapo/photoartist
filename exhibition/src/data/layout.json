@@ -1,0 +1,50 @@
+{
+  "wall": {
+    "widthCm": 400,
+    "heightCm": 250,
+    "centerLineCm": 145
+  },
+  "availableImages": [
+    "R0010140.jpeg",
+    "R0010284.jpeg",
+    "R0010412.jpeg",
+    "R0010421.jpeg",
+    "R0010587.jpeg",
+    "R0010594.jpeg",
+    "R0010837.jpeg",
+    "R0010883.jpeg",
+    "R0010979.jpeg",
+    "R0011085.jpeg",
+    "R0011097.jpeg",
+    "R0011162.jpeg"
+  ],
+  "artworks": [
+    {
+      "id": "art-1",
+      "file": "R0010140.jpeg",
+      "title": "R0010140.jpeg",
+      "widthCm": 60,
+      "heightCm": 40,
+      "xCm": 35,
+      "yCm": 70
+    },
+    {
+      "id": "art-2",
+      "file": "R0010284.jpeg",
+      "title": "R0010284.jpeg",
+      "widthCm": 70,
+      "heightCm": 50,
+      "xCm": 120,
+      "yCm": 65
+    },
+    {
+      "id": "art-3",
+      "file": "R0010412.jpeg",
+      "title": "R0010412.jpeg",
+      "widthCm": 50,
+      "heightCm": 50,
+      "xCm": 220,
+      "yCm": 60
+    }
+  ]
+}
