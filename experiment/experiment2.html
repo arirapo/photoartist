@@ -1,175 +1,319 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Photodiary Experiment 2</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photodiary Experiment 2</title>
 
-<style>
-body {
-  margin: 0;
-  background: #111;
-  display: grid;
-  place-items: center;
-  height: 100vh;
-  font-family: sans-serif;
-}
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
 
-.scene {
-  position: relative;
-  width: min(90vw, 1000px);
-}
+    body {
+      display: grid;
+      place-items: center;
+    }
 
-img {
-  width: 100%;
-  display: block;
-  transition: filter 1s ease;
-}
+    .scene {
+      position: relative;
+      width: min(92vw, 1200px);
+      max-height: 92vh;
+      aspect-ratio: 16 / 10;
+      background: #000;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
 
-.scene.active img {
-  filter: blur(3px) brightness(0.7);
-}
+    .scene img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter 0.8s ease, transform 1s ease;
+    }
 
-.hotspot {
-  position: absolute;
-  width: 50mm;
-  height: 50mm;
-  border-radius: 50%;
-  background: rgba(255,0,0,0.25);
-  border: 2px solid rgba(255,0,0,0.6);
-  transform: translate(-50%, -50%);
-  cursor: pointer;
-}
+    .scene.active img {
+      filter: brightness(0.72) blur(2px);
+      transform: scale(1.012);
+    }
 
-.poem {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  color: white;
-  font-size: 1.2rem;
-  line-height: 1.5;
-  opacity: 0;
-  transition: opacity 1s linear;
-}
-</style>
+    .hotspot {
+      position: absolute;
+      width: 50mm;
+      height: 50mm;
+      border-radius: 50%;
+      background: rgba(255, 0, 0, 0.22);
+      border: 2px solid rgba(255, 0, 0, 0.6);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      box-shadow: 0 0 40px rgba(255, 0, 0, 0.12);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .hotspot.is-holding {
+      transform: translate(-50%, -50%) scale(1.04);
+      background: rgba(255, 0, 0, 0.28);
+    }
+
+    .status {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 10;
+      max-width: min(90%, 520px);
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.45);
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 0.82rem;
+      line-height: 1.35;
+      backdrop-filter: blur(6px);
+      white-space: pre-line;
+    }
+
+    .poem-layer {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-items: end;
+      pointer-events: none;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.34) 0%,
+        rgba(0, 0, 0, 0.08) 28%,
+        rgba(0, 0, 0, 0) 55%
+      );
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .scene.active .poem-layer {
+      opacity: 1;
+    }
+
+    .poem-box {
+      padding: 28px 30px 34px;
+      max-width: 72ch;
+    }
+
+    .poem {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.96);
+      font-size: clamp(1rem, 1.25vw, 1.35rem);
+      line-height: 1.7;
+      white-space: pre-line;
+      opacity: 0;
+      transition: opacity 0.18s linear;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 900px) {
+      .scene {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        aspect-ratio: auto;
+      }
+
+      .poem-box {
+        padding: 22px 18px 28px;
+      }
+
+      .hotspot {
+        width: 42mm;
+        height: 42mm;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="scene" id="scene">
+    <div class="status" id="status">Initializing…</div>
 
-<div class="scene" id="scene">
-  <img src="../gallery/images/R0010140.jpeg">
+    <img src="../gallery/images/R0010140.jpeg" alt="Photodiary image" />
 
-  <div class="hotspot" id="hotspot" style="top: 55%; left: 60%;"></div>
+    <div
+      class="hotspot"
+      id="hotspot"
+      style="top: 55%; left: 60%;"
+      aria-label="Interactive hotspot"
+      role="button"
+      tabindex="0"
+    ></div>
 
-  <div class="poem" id="poem"></div>
-</div>
+    <div class="poem-layer">
+      <div class="poem-box">
+        <p class="poem" id="poem"></p>
+      </div>
+    </div>
+  </div>
 
-<script type="module">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+      authDomain: "photodiarygame.firebaseapp.com",
+      projectId: "photodiarygame",
+      storageBucket: "photodiarygame.firebasestorage.app",
+      messagingSenderId: "745003978989",
+      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+      measurementId: "G-1T7CBFRP55"
+    };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
-  authDomain: "photodiarygame.firebaseapp.com",
-  projectId: "photodiarygame",
-  storageBucket: "photodiarygame.appspot.com",
-  messagingSenderId: "745003978989",
-  appId: "1:745003978989:web:727489ba72b34d77af3ce4"
-};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
+    const scene = document.getElementById("scene");
+    const hotspot = document.getElementById("hotspot");
+    const poemEl = document.getElementById("poem");
+    const statusEl = document.getElementById("status");
 
-// UI
-const scene = document.getElementById("scene");
-const hotspot = document.getElementById("hotspot");
-const poemEl = document.getElementById("poem");
+    let poemText = "This moment waits.\nEven without connection.";
+    let audio = null;
+    let assetsReady = false;
 
-// 🔥 FALLBACK DATA (toimii aina)
-let poemText = "This moment waits.\nEven without connection.";
-let audio = null;
+    let progress = 0;
+    let holding = false;
 
-// 🔥 YRITETÄÄN FIREBASE
-async function loadData() {
-  try {
-    poemEl.textContent = "Loading...";
-
-    const refDoc = doc(db, "experiments", "experiment2");
-    const snap = await getDoc(refDoc);
-
-    if (!snap.exists()) {
-      poemEl.textContent = "Document missing → using fallback";
-      return;
+    function setStatus(message) {
+      statusEl.textContent = message;
     }
 
-    const data = snap.data();
+    async function loadData() {
+      setStatus("Connecting to Firebase…");
 
-    poemText = data.poemText || poemText;
-    poemEl.textContent = "Loaded from Firebase";
+      try {
+        const refDoc = doc(db, "experiments", "experiment2");
+        const snap = await getDoc(refDoc);
 
-    if (data.audioPath) {
-      const url = await getDownloadURL(ref(storage, data.audioPath));
-      audio = new Audio(url);
-      audio.loop = true;
-      audio.volume = 0;
+        if (!snap.exists()) {
+          setStatus(
+            "Firestore connected.\nDocument not found: experiments / experiment2\nUsing fallback poem."
+          );
+          poemEl.textContent = poemText;
+          assetsReady = true;
+          return;
+        }
+
+        const data = snap.data();
+        poemText = data.poemText || poemText;
+        poemEl.textContent = poemText;
+
+        let audioMessage = "No audioPath in document.";
+
+        if (data.audioPath) {
+          try {
+            const url = await getDownloadURL(ref(storage, data.audioPath));
+            audio = new Audio(url);
+            audio.loop = true;
+            audio.volume = 0;
+            audio.preload = "auto";
+            audioMessage = `Audio loaded: ${data.audioPath}`;
+          } catch (audioError) {
+            audioMessage = `Audio failed: ${data.audioPath}`;
+          }
+        }
+
+        assetsReady = true;
+        setStatus(
+          "Firebase OK.\n" +
+          "Poem loaded from Firestore.\n" +
+          audioMessage + "\n\n" +
+          "Hold the red circle."
+        );
+      } catch (error) {
+        poemEl.textContent = poemText;
+        assetsReady = true;
+        setStatus(
+          "Firebase failed.\n" +
+          "Using fallback poem.\n\n" +
+          "Most likely reasons:\n" +
+          "1. Firestore rules block reading\n" +
+          "2. Wrong collection/doc path\n" +
+          "3. Storage path missing"
+        );
+      }
     }
 
-  } catch (e) {
-    poemEl.textContent = "Firebase failed → using fallback";
-  }
-}
+    function update() {
+      if (holding && assetsReady) {
+        progress += 0.02;
+      } else {
+        progress -= 0.03;
+      }
 
-loadData();
+      progress = Math.max(0, Math.min(1, progress));
 
-// 🔥 HOLD LOGIIKKA
-let progress = 0;
-let holding = false;
+      scene.classList.toggle("active", progress > 0.01);
+      hotspot.classList.toggle("is-holding", progress > 0.01);
 
-function update() {
-  if (holding) {
-    progress += 0.02;
-  } else {
-    progress -= 0.03;
-  }
+      poemEl.style.opacity = progress.toFixed(3);
+      poemEl.textContent = poemText;
 
-  progress = Math.max(0, Math.min(1, progress));
+      if (audio) {
+        audio.volume = 0.45 * progress;
+      }
 
-  scene.classList.toggle("active", progress > 0);
+      if (progress > 0 && audio && audio.paused) {
+        audio.play().catch(() => {});
+      }
 
-  poemEl.style.opacity = progress;
-  poemEl.textContent = poemText;
+      if (progress === 0 && audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
 
-  if (audio) {
-    audio.volume = progress * 0.5;
-  }
+      requestAnimationFrame(update);
+    }
 
-  if (progress > 0 && audio && audio.paused) {
-    audio.play().catch(()=>{});
-  }
+    function beginHold(event) {
+      event.preventDefault();
+      holding = true;
+    }
 
-  if (progress === 0 && audio) {
-    audio.pause();
-    audio.currentTime = 0;
-  }
+    function endHold(event) {
+      if (event) event.preventDefault();
+      holding = false;
+    }
 
-  requestAnimationFrame(update);
-}
+    hotspot.addEventListener("pointerdown", beginHold);
+    hotspot.addEventListener("pointerup", endHold);
+    hotspot.addEventListener("pointerleave", endHold);
+    hotspot.addEventListener("pointercancel", endHold);
 
-update();
+    hotspot.addEventListener("touchstart", beginHold, { passive: false });
+    hotspot.addEventListener("touchend", endHold, { passive: false });
+    hotspot.addEventListener("touchcancel", endHold, { passive: false });
 
-hotspot.addEventListener("pointerdown", () => {
-  holding = true;
-});
+    hotspot.addEventListener("mousedown", beginHold);
+    hotspot.addEventListener("mouseup", endHold);
 
-window.addEventListener("pointerup", () => {
-  holding = false;
-});
+    hotspot.addEventListener("keydown", (event) => {
+      if (event.key === " " || event.key === "Enter") {
+        beginHold(event);
+      }
+    });
 
-</script>
+    hotspot.addEventListener("keyup", (event) => {
+      if (event.key === " " || event.key === "Enter") {
+        endHold(event);
+      }
+    });
 
+    loadData();
+    update();
+  </script>
 </body>
 </html>
