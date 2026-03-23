@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photodiary Experiment 2</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .scene {
+      position: relative;
+      width: min(92vw, 1200px);
+      max-height: 92vh;
+      aspect-ratio: 16 / 10;
+      background: #000;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .scene img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter 0.8s ease, transform 1s ease;
+    }
+
+    .scene.active img {
+      filter: brightness(0.72) blur(2px);
+      transform: scale(1.012);
+    }
+
+    .hotspot {
+      position: absolute;
+      width: 50mm;
+      height: 50mm;
+      border-radius: 50%;
+      background: rgba(255, 0, 0, 0.22);
+      border: 2px solid rgba(255, 0, 0, 0.6);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      box-shadow: 0 0 40px rgba(255, 0, 0, 0.12);
+      transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .hotspot.is-holding {
+      transform: translate(-50%, -50%) scale(1.04);
+      background: rgba(255, 0, 0, 0.28);
+      box-shadow: 0 0 60px rgba(255, 0, 0, 0.18);
+    }
+
+    .status {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 10;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.45);
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 0.8rem;
+      line-height: 1.35;
+      white-space: pre-line;
+      max-width: min(90%, 560px);
+      backdrop-filter: blur(6px);
+    }
+
+    .poem-layer {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-items: end;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(0,0,0,0.35), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .scene.active .poem-layer {
+      opacity: 1;
+    }
+
+    .poem-box {
+      padding: 30px;
+      max-width: 72ch;
+    }
+
+    .poem {
+      margin: 0;
+      color: white;
+      font-size: clamp(1rem, 1.25vw, 1.35rem);
+      line-height: 1.65;
+      opacity: 0;
+      transition: opacity 0.2s linear;
+      white-space: pre-line;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 900px) {
+      .scene {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        aspect-ratio: auto;
+      }
+
+      .hotspot {
+        width: 42mm;
+        height: 42mm;
+      }
+
+      .poem-box {
+        padding: 22px 18px 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="status" id="status">Loading...</div>
+
+  <img id="main-image" src="" alt="Photodiary image" />
+
+  <div
+    class="hotspot"
+    id="hotspot"
+    style="top: 55%; left: 60%;"
+    aria-label="Interactive hotspot"
+    role="button"
+    tabindex="0"
+  ></div>
+
+  <div class="poem-layer">
+    <div class="poem-box">
+      <p class="poem" id="poem"></p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+    authDomain: "photodiarygame.firebaseapp.com",
+    projectId: "photodiarygame",
+    storageBucket: "photodiarygame.firebasestorage.app",
+    messagingSenderId: "745003978989",
+    appId: "1:745003978989:web:727489ba72b34d77af3ce4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const scene = document.getElementById("scene");
+  const hotspot = document.getElementById("hotspot");
+  const poemEl = document.getElementById("poem");
+  const statusEl = document.getElementById("status");
+  const mainImageEl = document.getElementById("main-image");
+
+  const GALLERY_JSON_URL = "../gallery/src/data/gallery.json";
+  const GALLERY_IMAGE_BASE = "../gallery/images/";
+
+  let galleryItems = [];
+  let poems = ["Fallback poem"];
+  let audioObservations = [];
+  let currentPoem = poems[0];
+  let currentAudioObservation = null;
+  let currentImage = null;
+  let audio = null;
+
+  let assetsReady = false;
+  let holding = false;
+  let progress = 0;
+
+  let lastPoemIndex = -1;
+  let lastAudioIndex = -1;
+  let lastImageIndex = -1;
+
+  function pickRandomNoRepeat(arr, lastIndexRefName) {
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    if (arr.length === 1) {
+      window[lastIndexRefName] = 0;
+      return arr[0];
+    }
+
+    let index;
+    const lastIndex = window[lastIndexRefName];
+
+    do {
+      index = Math.floor(Math.random() * arr.length);
+    } while (index === lastIndex);
+
+    window[lastIndexRefName] = index;
+    return arr[index];
+  }
+
+  function setStatus(message) {
+    statusEl.textContent = message;
+  }
+
+  function stopCurrentAudio() {
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio = null;
+    }
+  }
+
+  function prepareRandomAudio() {
+    stopCurrentAudio();
+
+    const selected = pickRandomNoRepeat(audioObservations, "lastAudioIndex");
+    currentAudioObservation = selected || null;
+
+    if (currentAudioObservation && currentAudioObservation.audioUrl) {
+      audio = new Audio(currentAudioObservation.audioUrl);
+      audio.loop = true;
+      audio.volume = 0;
+      audio.preload = "auto";
+    }
+  }
+
+  function prepareRandomPoem() {
+    const selected = pickRandomNoRepeat(poems, "lastPoemIndex");
+    currentPoem = selected || currentPoem;
+    poemEl.textContent = currentPoem;
+  }
+
+  function prepareRandomImage() {
+    const selected = pickRandomNoRepeat(galleryItems, "lastImageIndex");
+    currentImage = selected || null;
+
+    if (currentImage && currentImage.file) {
+      mainImageEl.src = GALLERY_IMAGE_BASE + currentImage.file;
+      mainImageEl.alt = currentImage.title || currentImage.file || "Photodiary image";
+    }
+  }
+
+  async function loadGalleryData() {
+    const response = await fetch(GALLERY_JSON_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Could not load gallery.json");
+    }
+
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      galleryItems = data.filter(
+        item => item && typeof item.file === "string" && item.file.trim() !== ""
+      );
+    }
+
+    if (galleryItems.length === 0) {
+      throw new Error("gallery.json contains no usable images");
+    }
+
+    prepareRandomImage();
+  }
+
+  async function loadFirebaseData() {
+    const experimentRef = doc(db, "experiments", "experiment2");
+    const experimentSnap = await getDoc(experimentRef);
+
+    if (experimentSnap.exists()) {
+      const experimentData = experimentSnap.data();
+
+      if (Array.isArray(experimentData.poems) && experimentData.poems.length > 0) {
+        poems = experimentData.poems.filter(
+          item => typeof item === "string" && item.trim() !== ""
+        );
+      } else if (
+        typeof experimentData.poemText === "string" &&
+        experimentData.poemText.trim() !== ""
+      ) {
+        poems = [experimentData.poemText];
+      }
+    }
+
+    const audioSnap = await getDocs(collection(db, "audio_observations"));
+    audioObservations = [];
+
+    audioSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (typeof data.audioUrl === "string" && data.audioUrl.trim() !== "") {
+        audioObservations.push({
+          id: docSnap.id,
+          ...data
+        });
+      }
+    });
+
+    prepareRandomPoem();
+  }
+
+  async function init() {
+    try {
+      await loadGalleryData();
+      await loadFirebaseData();
+
+      assetsReady = true;
+
+      setStatus(
+        "System OK.\n" +
+        `Image loaded: ${currentImage?.file || "none"}\n` +
+        `Poems loaded: ${poems.length}\n` +
+        `Audio observations loaded: ${audioObservations.length}\n\n` +
+        "Hold the red circle."
+      );
+    } catch (error) {
+      console.error(error);
+      assetsReady = true;
+      setStatus("Load error");
+    }
+  }
+
+  function update() {
+    if (holding && assetsReady) {
+      progress += 0.02;
+    } else {
+      progress -= 0.03;
+    }
+
+    progress = Math.max(0, Math.min(1, progress));
+
+    scene.classList.toggle("active", progress > 0);
+    hotspot.classList.toggle("is-holding", progress > 0);
+
+    poemEl.style.opacity = progress.toFixed(3);
+    poemEl.textContent = currentPoem;
+
+    if (audio) {
+      audio.volume = progress * 0.5;
+    }
+
+    if (progress > 0 && audio && audio.paused) {
+      audio.play().catch(() => {});
+    }
+
+    if (progress === 0 && audio) {
+      stopCurrentAudio();
+    }
+
+    requestAnimationFrame(update);
+  }
+
+  function beginHold(event) {
+    event.preventDefault();
+    if (!assetsReady) return;
+
+    prepareRandomPoem();
+    prepareRandomAudio();
+
+    holding = true;
+  }
+
+  function endHold(event) {
+    if (event) event.preventDefault();
+    holding = false;
+  }
+
+  hotspot.addEventListener("pointerdown", beginHold);
+  hotspot.addEventListener("pointerup", endHold);
+  hotspot.addEventListener("pointerleave", endHold);
+  hotspot.addEventListener("pointercancel", endHold);
+
+  hotspot.addEventListener("touchstart", beginHold, { passive: false });
+  hotspot.addEventListener("touchend", endHold, { passive: false });
+  hotspot.addEventListener("touchcancel", endHold, { passive: false });
+
+  hotspot.addEventListener("mousedown", beginHold);
+  hotspot.addEventListener("mouseup", endHold);
+
+  hotspot.addEventListener("keydown", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      beginHold(event);
+    }
+  });
+
+  hotspot.addEventListener("keyup", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      endHold(event);
+    }
+  });
+
+  init();
+  update();
+</script>
+
+</body>
+</html>
