@@ -180,15 +180,23 @@
     const poemEl = document.getElementById("poem");
     const statusEl = document.getElementById("status");
 
-    let poemText = "This moment waits.\nEven without connection.";
+    let poems = ["Fog stays longer than memory."];
     let audio = null;
     let assetsReady = false;
 
     let progress = 0;
     let holding = false;
+    let currentPoem = poems[0];
+    let hasPickedPoemForCurrentHold = false;
 
     function setStatus(message) {
       statusEl.textContent = message;
+    }
+
+    function randomItem(arr) {
+      if (!Array.isArray(arr) || arr.length === 0) return null;
+      const index = Math.floor(Math.random() * arr.length);
+      return arr[index];
     }
 
     async function loadData() {
@@ -199,21 +207,30 @@
         const snap = await getDoc(refDoc);
 
         if (!snap.exists()) {
-          setStatus(
-            "Firestore connected.\nDocument not found: experiments / experiment2\nUsing fallback poem."
-          );
-          poemEl.textContent = poemText;
+          poemEl.textContent = currentPoem;
           assetsReady = true;
+          setStatus(
+            "Firestore connected.\n" +
+            "Document not found: experiments / experiment2\n" +
+            "Using fallback poem."
+          );
           return;
         }
 
         const data = snap.data();
-        poemText = data.poemText || poemText;
-        poemEl.textContent = poemText;
+
+        if (Array.isArray(data.poems) && data.poems.length > 0) {
+          poems = data.poems.filter(item => typeof item === "string" && item.trim() !== "");
+        } else if (typeof data.poemText === "string" && data.poemText.trim() !== "") {
+          poems = [data.poemText];
+        }
+
+        currentPoem = randomItem(poems) || "Fog stays longer than memory.";
+        poemEl.textContent = currentPoem;
 
         let audioMessage = "No audioPath in document.";
 
-        if (data.audioPath) {
+        if (typeof data.audioPath === "string" && data.audioPath.trim() !== "") {
           try {
             const url = await getDownloadURL(ref(storage, data.audioPath));
             audio = new Audio(url);
@@ -229,12 +246,12 @@
         assetsReady = true;
         setStatus(
           "Firebase OK.\n" +
-          "Poem loaded from Firestore.\n" +
+          `Poems loaded: ${poems.length}\n` +
           audioMessage + "\n\n" +
           "Hold the red circle."
         );
       } catch (error) {
-        poemEl.textContent = poemText;
+        poemEl.textContent = currentPoem;
         assetsReady = true;
         setStatus(
           "Firebase failed.\n" +
@@ -260,7 +277,7 @@
       hotspot.classList.toggle("is-holding", progress > 0.01);
 
       poemEl.style.opacity = progress.toFixed(3);
-      poemEl.textContent = poemText;
+      poemEl.textContent = currentPoem;
 
       if (audio) {
         audio.volume = 0.45 * progress;
@@ -280,12 +297,22 @@
 
     function beginHold(event) {
       event.preventDefault();
+
+      if (!assetsReady) return;
+
+      if (!hasPickedPoemForCurrentHold) {
+        currentPoem = randomItem(poems) || currentPoem;
+        poemEl.textContent = currentPoem;
+        hasPickedPoemForCurrentHold = true;
+      }
+
       holding = true;
     }
 
     function endHold(event) {
       if (event) event.preventDefault();
       holding = false;
+      hasPickedPoemForCurrentHold = false;
     }
 
     hotspot.addEventListener("pointerdown", beginHold);
