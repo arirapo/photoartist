@@ -71,49 +71,46 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/fireba
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-// 🔥 SINUN CONFIG (korjattu)
 const firebaseConfig = {
   apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
   authDomain: "photodiarygame.firebaseapp.com",
   projectId: "photodiarygame",
   storageBucket: "photodiarygame.appspot.com",
   messagingSenderId: "745003978989",
-  appId: "1:745003978989:web:727489ba72b34d77af3ce4",
-  measurementId: "G-1T7CBFRP55"
+  appId: "1:745003978989:web:727489ba72b34d77af3ce4"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-console.log("Firebase initialized");
-
-// 🔥 ELEMENTIT
+// UI
 const scene = document.getElementById("scene");
 const hotspot = document.getElementById("hotspot");
 const poemEl = document.getElementById("poem");
 
-let audio;
-let poemText = "";
+// 🔥 FALLBACK DATA (toimii aina)
+let poemText = "This moment waits.\nEven without connection.";
+let audio = null;
 
-// 🔥 LADATAAN DATA FIREBASESTA
+// 🔥 YRITETÄÄN FIREBASE
 async function loadData() {
   try {
+    poemEl.textContent = "Loading...";
+
     const refDoc = doc(db, "experiments", "experiment2");
     const snap = await getDoc(refDoc);
 
     if (!snap.exists()) {
-      console.error("Document not found");
-      poemEl.textContent = "No data found.";
+      poemEl.textContent = "Document missing → using fallback";
       return;
     }
 
     const data = snap.data();
-    console.log("Firestore OK:", data);
 
-    poemText = data.poemText || "";
+    poemText = data.poemText || poemText;
+    poemEl.textContent = "Loaded from Firebase";
 
-    // 🔊 AUDIO
     if (data.audioPath) {
       const url = await getDownloadURL(ref(storage, data.audioPath));
       audio = new Audio(url);
@@ -122,8 +119,7 @@ async function loadData() {
     }
 
   } catch (e) {
-    console.error("Firebase load failed:", e);
-    poemEl.textContent = "Firebase load failed.";
+    poemEl.textContent = "Firebase failed → using fallback";
   }
 }
 
@@ -132,7 +128,6 @@ loadData();
 // 🔥 HOLD LOGIIKKA
 let progress = 0;
 let holding = false;
-let raf;
 
 function update() {
   if (holding) {
@@ -161,12 +156,11 @@ function update() {
     audio.currentTime = 0;
   }
 
-  raf = requestAnimationFrame(update);
+  requestAnimationFrame(update);
 }
 
 update();
 
-// 🖱️ + 📱 EVENTIT
 hotspot.addEventListener("pointerdown", () => {
   holding = true;
 });
