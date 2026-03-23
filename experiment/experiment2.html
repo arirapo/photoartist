@@ -1,398 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photodiary Experiment 2</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Photodiary Experiment 2</title>
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #111;
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-      overflow: hidden;
-    }
+<style>
+body {
+  margin: 0;
+  background: #111;
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  font-family: sans-serif;
+}
 
-    body {
-      display: grid;
-      place-items: center;
-    }
+.scene {
+  position: relative;
+  width: min(90vw, 1000px);
+}
 
-    .scene {
-      position: relative;
-      width: min(92vw, 1200px);
-      max-height: 92vh;
-      aspect-ratio: 16 / 10;
-      background: #000;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-    }
+img {
+  width: 100%;
+  display: block;
+  transition: filter 1s ease;
+}
 
-    .scene img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: filter 0.8s ease, transform 1.2s ease;
-    }
+.scene.active img {
+  filter: blur(3px) brightness(0.7);
+}
 
-    .scene.active img {
-      filter: brightness(0.75) blur(2px);
-      transform: scale(1.015);
-    }
+.hotspot {
+  position: absolute;
+  width: 50mm;
+  height: 50mm;
+  border-radius: 50%;
+  background: rgba(255,0,0,0.25);
+  border: 2px solid rgba(255,0,0,0.6);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
 
-    .hotspot {
-      position: absolute;
-      width: 50mm;
-      height: 50mm;
-      border-radius: 50%;
-      background: rgba(255, 0, 0, 0.22);
-      border: 2px solid rgba(255, 0, 0, 0.45);
-      transform: translate(-50%, -50%);
-      cursor: pointer;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-      transition:
-        transform 0.25s ease,
-        background 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
-      box-shadow:
-        0 0 0 0 rgba(255, 0, 0, 0.00),
-        0 0 40px rgba(255, 0, 0, 0.10);
-    }
-
-    .hotspot:hover,
-    .hotspot.is-holding {
-      transform: translate(-50%, -50%) scale(1.04);
-      background: rgba(255, 0, 0, 0.28);
-      border-color: rgba(255, 0, 0, 0.70);
-      box-shadow:
-        0 0 0 8px rgba(255, 0, 0, 0.08),
-        0 0 60px rgba(255, 0, 0, 0.18);
-    }
-
-    .poem-layer {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      align-items: end;
-      pointer-events: none;
-      background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.30) 0%,
-        rgba(0, 0, 0, 0.10) 20%,
-        rgba(0, 0, 0, 0.00) 50%
-      );
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    .scene.active .poem-layer {
-      opacity: 1;
-    }
-
-    .poem-box {
-      padding: 28px 32px 36px;
-      max-width: 70ch;
-    }
-
-    .poem {
-      margin: 0;
-      color: rgba(255, 255, 255, 0.96);
-      font-size: clamp(1rem, 1.3vw, 1.35rem);
-      line-height: 1.7;
-      letter-spacing: 0.01em;
-      white-space: pre-line;
-      opacity: 0;
-      transition: opacity 0.25s linear;
-      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .status {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      z-index: 5;
-      padding: 8px 10px;
-      background: rgba(0, 0, 0, 0.38);
-      color: rgba(255, 255, 255, 0.78);
-      border-radius: 999px;
-      font-size: 0.78rem;
-      letter-spacing: 0.03em;
-      backdrop-filter: blur(6px);
-    }
-
-    @media (max-width: 900px) {
-      .scene {
-        width: 100vw;
-        height: 100vh;
-        max-height: none;
-        aspect-ratio: auto;
-      }
-
-      .poem-box {
-        padding: 24px 20px 30px;
-      }
-
-      .hotspot {
-        width: 42mm;
-        height: 42mm;
-      }
-    }
-  </style>
+.poem {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  color: white;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  opacity: 0;
+  transition: opacity 1s linear;
+}
+</style>
 </head>
+
 <body>
-  <div class="scene" id="scene">
-    <div class="status" id="status">Loading poem and sound...</div>
 
-    <!-- Vaihda tähän oma kuvasi -->
-    <img src="../gallery/images/R0010140.jpeg" alt="Photodiary image" />
+<div class="scene" id="scene">
+  <img src="../gallery/images/R0010140.jpeg">
 
-    <!-- Hotspotin paikkaa voit säätää top/left-arvoilla -->
-    <div
-      class="hotspot"
-      id="hotspot"
-      style="top: 56%; left: 62%;"
-      aria-label="Interactive hotspot"
-      role="button"
-      tabindex="0"
-    ></div>
+  <div class="hotspot" id="hotspot" style="top: 55%; left: 60%;"></div>
 
-    <div class="poem-layer">
-      <div class="poem-box">
-        <p class="poem" id="poem"></p>
-      </div>
-    </div>
-  </div>
+  <div class="poem" id="poem"></div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-    import {
-      getStorage,
-      ref,
-      getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+<script type="module">
 
-    // ============================================
-    // 1. FIREBASE CONFIG
-    // Korvaa nämä omilla arvoillasi
-    // ============================================
- const firebaseConfig = {
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+// 🔥 SINUN CONFIG (korjattu)
+const firebaseConfig = {
   apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
   authDomain: "photodiarygame.firebaseapp.com",
   projectId: "photodiarygame",
-  storageBucket: "photodiarygame.firebasestorage.app",
+  storageBucket: "photodiarygame.appspot.com",
   messagingSenderId: "745003978989",
   appId: "1:745003978989:web:727489ba72b34d77af3ce4",
   measurementId: "G-1T7CBFRP55"
 };
 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-    // ============================================
-    // 2. MISTÄ RUNO JA ÄÄNI HAETAAN
-    // Firestore-dokumentti esim:
-    // collection: "experiments"
-    // doc id: "experiment2"
-    //
-    // Kentät dokumentissa:
-    // poemText: "Your poem here..."
-    // audioPath: "audio/experiment2.mp3"
-    // ============================================
-    const FIRESTORE_COLLECTION = "experiments";
-    const FIRESTORE_DOC_ID = "experiment2";
+console.log("Firebase initialized");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
+// 🔥 ELEMENTIT
+const scene = document.getElementById("scene");
+const hotspot = document.getElementById("hotspot");
+const poemEl = document.getElementById("poem");
 
-    const scene = document.getElementById("scene");
-    const hotspot = document.getElementById("hotspot");
-    const poemEl = document.getElementById("poem");
-    const statusEl = document.getElementById("status");
+let audio;
+let poemText = "";
 
-    let audio = null;
-    let assetsReady = false;
+// 🔥 LADATAAN DATA FIREBASESTA
+async function loadData() {
+  try {
+    const refDoc = doc(db, "experiments", "experiment2");
+    const snap = await getDoc(refDoc);
 
-    let revealProgress = 0; // 0...1
-    let holdAnimationFrame = null;
-    let releaseAnimationFrame = null;
-    let isHolding = false;
-    let lastTimestamp = null;
-
-    async function loadAssetsFromFirebase() {
-      try {
-        const docRef = doc(db, FIRESTORE_COLLECTION, FIRESTORE_DOC_ID);
-        const snap = await getDoc(docRef);
-
-        if (!snap.exists()) {
-          throw new Error("Firestore document not found.");
-        }
-
-        const data = snap.data();
-        const poemText = data.poemText || "";
-        const audioPath = data.audioPath || "";
-
-        poemEl.textContent = poemText;
-
-        if (!audioPath) {
-          throw new Error("audioPath missing from Firestore document.");
-        }
-
-        const audioUrl = await getDownloadURL(ref(storage, audioPath));
-
-        audio = new Audio(audioUrl);
-        audio.loop = true;
-        audio.volume = 0;
-        audio.preload = "auto";
-
-        assetsReady = true;
-        statusEl.textContent = "Hold the red circle.";
-      } catch (error) {
-        console.error(error);
-        statusEl.textContent = "Firebase load failed.";
-        poemEl.textContent = "The fragment could not be reached.";
-      }
+    if (!snap.exists()) {
+      console.error("Document not found");
+      poemEl.textContent = "No data found.";
+      return;
     }
 
-    function setRevealVisuals(progress) {
-      revealProgress = Math.max(0, Math.min(1, progress));
+    const data = snap.data();
+    console.log("Firestore OK:", data);
 
-      scene.classList.toggle("active", revealProgress > 0.02);
-      hotspot.classList.toggle("is-holding", revealProgress > 0.02);
+    poemText = data.poemText || "";
 
-      poemEl.style.opacity = revealProgress.toFixed(3);
-
-      if (audio) {
-        audio.volume = 0.45 * revealProgress;
-      }
+    // 🔊 AUDIO
+    if (data.audioPath) {
+      const url = await getDownloadURL(ref(storage, data.audioPath));
+      audio = new Audio(url);
+      audio.loop = true;
+      audio.volume = 0;
     }
 
-    async function startAudioIfNeeded() {
-      if (!audio) return;
-      if (!audio.paused) return;
+  } catch (e) {
+    console.error("Firebase load failed:", e);
+    poemEl.textContent = "Firebase load failed.";
+  }
+}
 
-      try {
-        await audio.play();
-      } catch (error) {
-        console.warn("Audio play blocked until user gesture fully accepted.", error);
-      }
-    }
+loadData();
 
-    function stopAudioIfNeeded() {
-      if (!audio) return;
-      if (revealProgress <= 0.001) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    }
+// 🔥 HOLD LOGIIKKA
+let progress = 0;
+let holding = false;
+let raf;
 
-    function animateHold(timestamp) {
-      if (!isHolding) return;
+function update() {
+  if (holding) {
+    progress += 0.02;
+  } else {
+    progress -= 0.03;
+  }
 
-      if (lastTimestamp === null) lastTimestamp = timestamp;
-      const delta = timestamp - lastTimestamp;
-      lastTimestamp = timestamp;
+  progress = Math.max(0, Math.min(1, progress));
 
-      // Noin 2.8 sekuntia täyteen näkyvyyteen
-      const next = revealProgress + delta / 2800;
-      setRevealVisuals(next);
+  scene.classList.toggle("active", progress > 0);
 
-      if (revealProgress < 1) {
-        holdAnimationFrame = requestAnimationFrame(animateHold);
-      } else {
-        holdAnimationFrame = null;
-      }
-    }
+  poemEl.style.opacity = progress;
+  poemEl.textContent = poemText;
 
-    function animateRelease(timestamp) {
-      if (isHolding) return;
+  if (audio) {
+    audio.volume = progress * 0.5;
+  }
 
-      if (lastTimestamp === null) lastTimestamp = timestamp;
-      const delta = timestamp - lastTimestamp;
-      lastTimestamp = timestamp;
+  if (progress > 0 && audio && audio.paused) {
+    audio.play().catch(()=>{});
+  }
 
-      // Hitaampi fade out
-      const next = revealProgress - delta / 1800;
-      setRevealVisuals(next);
+  if (progress === 0 && audio) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
 
-      if (revealProgress > 0) {
-        releaseAnimationFrame = requestAnimationFrame(animateRelease);
-      } else {
-        releaseAnimationFrame = null;
-        stopAudioIfNeeded();
-      }
-    }
+  raf = requestAnimationFrame(update);
+}
 
-    async function beginHold(event) {
-      event.preventDefault();
-      if (!assetsReady) return;
+update();
 
-      isHolding = true;
-      lastTimestamp = null;
+// 🖱️ + 📱 EVENTIT
+hotspot.addEventListener("pointerdown", () => {
+  holding = true;
+});
 
-      if (releaseAnimationFrame) {
-        cancelAnimationFrame(releaseAnimationFrame);
-        releaseAnimationFrame = null;
-      }
+window.addEventListener("pointerup", () => {
+  holding = false;
+});
 
-      await startAudioIfNeeded();
+</script>
 
-      if (!holdAnimationFrame) {
-        holdAnimationFrame = requestAnimationFrame(animateHold);
-      }
-    }
-
-    function endHold(event) {
-      if (event) event.preventDefault();
-
-      isHolding = false;
-      lastTimestamp = null;
-
-      if (holdAnimationFrame) {
-        cancelAnimationFrame(holdAnimationFrame);
-        holdAnimationFrame = null;
-      }
-
-      if (!releaseAnimationFrame) {
-        releaseAnimationFrame = requestAnimationFrame(animateRelease);
-      }
-    }
-
-    // Mouse
-    hotspot.addEventListener("mousedown", beginHold);
-    window.addEventListener("mouseup", endHold);
-    hotspot.addEventListener("mouseleave", () => {
-      if (isHolding) endHold();
-    });
-
-    // Touch / pen / iPad
-    hotspot.addEventListener("pointerdown", beginHold);
-    window.addEventListener("pointerup", endHold);
-    window.addEventListener("pointercancel", endHold);
-
-    // Keyboard accessibility
-    hotspot.addEventListener("keydown", async (event) => {
-      if (event.key === " " || event.key === "Enter") {
-        await beginHold(event);
-      }
-    });
-
-    hotspot.addEventListener("keyup", (event) => {
-      if (event.key === " " || event.key === "Enter") {
-        endHold(event);
-      }
-    });
-
-    loadAssetsFromFirebase();
-  </script>
 </body>
 </html>
