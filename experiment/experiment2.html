@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photodiary Experiment 2</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .scene {
+      position: relative;
+      width: min(92vw, 1200px);
+      max-height: 92vh;
+      aspect-ratio: 16 / 10;
+      background: #000;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .scene img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter 0.8s ease, transform 1.2s ease;
+    }
+
+    .scene.active img {
+      filter: brightness(0.75) blur(2px);
+      transform: scale(1.015);
+    }
+
+    .hotspot {
+      position: absolute;
+      width: 50mm;
+      height: 50mm;
+      border-radius: 50%;
+      background: rgba(255, 0, 0, 0.22);
+      border: 2px solid rgba(255, 0, 0, 0.45);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      transition:
+        transform 0.25s ease,
+        background 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+      box-shadow:
+        0 0 0 0 rgba(255, 0, 0, 0.00),
+        0 0 40px rgba(255, 0, 0, 0.10);
+    }
+
+    .hotspot:hover,
+    .hotspot.is-holding {
+      transform: translate(-50%, -50%) scale(1.04);
+      background: rgba(255, 0, 0, 0.28);
+      border-color: rgba(255, 0, 0, 0.70);
+      box-shadow:
+        0 0 0 8px rgba(255, 0, 0, 0.08),
+        0 0 60px rgba(255, 0, 0, 0.18);
+    }
+
+    .poem-layer {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-items: end;
+      pointer-events: none;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.30) 0%,
+        rgba(0, 0, 0, 0.10) 20%,
+        rgba(0, 0, 0, 0.00) 50%
+      );
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .scene.active .poem-layer {
+      opacity: 1;
+    }
+
+    .poem-box {
+      padding: 28px 32px 36px;
+      max-width: 70ch;
+    }
+
+    .poem {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.96);
+      font-size: clamp(1rem, 1.3vw, 1.35rem);
+      line-height: 1.7;
+      letter-spacing: 0.01em;
+      white-space: pre-line;
+      opacity: 0;
+      transition: opacity 0.25s linear;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .status {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 5;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.38);
+      color: rgba(255, 255, 255, 0.78);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(6px);
+    }
+
+    @media (max-width: 900px) {
+      .scene {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        aspect-ratio: auto;
+      }
+
+      .poem-box {
+        padding: 24px 20px 30px;
+      }
+
+      .hotspot {
+        width: 42mm;
+        height: 42mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <div class="status" id="status">Loading poem and sound...</div>
+
+    <!-- Vaihda tähän oma kuvasi -->
+    <img src="../gallery/images/R0010140.jpeg" alt="Photodiary image" />
+
+    <!-- Hotspotin paikkaa voit säätää top/left-arvoilla -->
+    <div
+      class="hotspot"
+      id="hotspot"
+      style="top: 56%; left: 62%;"
+      aria-label="Interactive hotspot"
+      role="button"
+      tabindex="0"
+    ></div>
+
+    <div class="poem-layer">
+      <div class="poem-box">
+        <p class="poem" id="poem"></p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import {
+      getStorage,
+      ref,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    // ============================================
+    // 1. FIREBASE CONFIG
+    // Korvaa nämä omilla arvoillasi
+    // ============================================
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // ============================================
+    // 2. MISTÄ RUNO JA ÄÄNI HAETAAN
+    // Firestore-dokumentti esim:
+    // collection: "experiments"
+    // doc id: "experiment2"
+    //
+    // Kentät dokumentissa:
+    // poemText: "Your poem here..."
+    // audioPath: "audio/experiment2.mp3"
+    // ============================================
+    const FIRESTORE_COLLECTION = "experiments";
+    const FIRESTORE_DOC_ID = "experiment2";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    const scene = document.getElementById("scene");
+    const hotspot = document.getElementById("hotspot");
+    const poemEl = document.getElementById("poem");
+    const statusEl = document.getElementById("status");
+
+    let audio = null;
+    let assetsReady = false;
+
+    let revealProgress = 0; // 0...1
+    let holdAnimationFrame = null;
+    let releaseAnimationFrame = null;
+    let isHolding = false;
+    let lastTimestamp = null;
+
+    async function loadAssetsFromFirebase() {
+      try {
+        const docRef = doc(db, FIRESTORE_COLLECTION, FIRESTORE_DOC_ID);
+        const snap = await getDoc(docRef);
+
+        if (!snap.exists()) {
+          throw new Error("Firestore document not found.");
+        }
+
+        const data = snap.data();
+        const poemText = data.poemText || "";
+        const audioPath = data.audioPath || "";
+
+        poemEl.textContent = poemText;
+
+        if (!audioPath) {
+          throw new Error("audioPath missing from Firestore document.");
+        }
+
+        const audioUrl = await getDownloadURL(ref(storage, audioPath));
+
+        audio = new Audio(audioUrl);
+        audio.loop = true;
+        audio.volume = 0;
+        audio.preload = "auto";
+
+        assetsReady = true;
+        statusEl.textContent = "Hold the red circle.";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "Firebase load failed.";
+        poemEl.textContent = "The fragment could not be reached.";
+      }
+    }
+
+    function setRevealVisuals(progress) {
+      revealProgress = Math.max(0, Math.min(1, progress));
+
+      scene.classList.toggle("active", revealProgress > 0.02);
+      hotspot.classList.toggle("is-holding", revealProgress > 0.02);
+
+      poemEl.style.opacity = revealProgress.toFixed(3);
+
+      if (audio) {
+        audio.volume = 0.45 * revealProgress;
+      }
+    }
+
+    async function startAudioIfNeeded() {
+      if (!audio) return;
+      if (!audio.paused) return;
+
+      try {
+        await audio.play();
+      } catch (error) {
+        console.warn("Audio play blocked until user gesture fully accepted.", error);
+      }
+    }
+
+    function stopAudioIfNeeded() {
+      if (!audio) return;
+      if (revealProgress <= 0.001) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    }
+
+    function animateHold(timestamp) {
+      if (!isHolding) return;
+
+      if (lastTimestamp === null) lastTimestamp = timestamp;
+      const delta = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+
+      // Noin 2.8 sekuntia täyteen näkyvyyteen
+      const next = revealProgress + delta / 2800;
+      setRevealVisuals(next);
+
+      if (revealProgress < 1) {
+        holdAnimationFrame = requestAnimationFrame(animateHold);
+      } else {
+        holdAnimationFrame = null;
+      }
+    }
+
+    function animateRelease(timestamp) {
+      if (isHolding) return;
+
+      if (lastTimestamp === null) lastTimestamp = timestamp;
+      const delta = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+
+      // Hitaampi fade out
+      const next = revealProgress - delta / 1800;
+      setRevealVisuals(next);
+
+      if (revealProgress > 0) {
+        releaseAnimationFrame = requestAnimationFrame(animateRelease);
+      } else {
+        releaseAnimationFrame = null;
+        stopAudioIfNeeded();
+      }
+    }
+
+    async function beginHold(event) {
+      event.preventDefault();
+      if (!assetsReady) return;
+
+      isHolding = true;
+      lastTimestamp = null;
+
+      if (releaseAnimationFrame) {
+        cancelAnimationFrame(releaseAnimationFrame);
+        releaseAnimationFrame = null;
+      }
+
+      await startAudioIfNeeded();
+
+      if (!holdAnimationFrame) {
+        holdAnimationFrame = requestAnimationFrame(animateHold);
+      }
+    }
+
+    function endHold(event) {
+      if (event) event.preventDefault();
+
+      isHolding = false;
+      lastTimestamp = null;
+
+      if (holdAnimationFrame) {
+        cancelAnimationFrame(holdAnimationFrame);
+        holdAnimationFrame = null;
+      }
+
+      if (!releaseAnimationFrame) {
+        releaseAnimationFrame = requestAnimationFrame(animateRelease);
+      }
+    }
+
+    // Mouse
+    hotspot.addEventListener("mousedown", beginHold);
+    window.addEventListener("mouseup", endHold);
+    hotspot.addEventListener("mouseleave", () => {
+      if (isHolding) endHold();
+    });
+
+    // Touch / pen / iPad
+    hotspot.addEventListener("pointerdown", beginHold);
+    window.addEventListener("pointerup", endHold);
+    window.addEventListener("pointercancel", endHold);
+
+    // Keyboard accessibility
+    hotspot.addEventListener("keydown", async (event) => {
+      if (event.key === " " || event.key === "Enter") {
+        await beginHold(event);
+      }
+    });
+
+    hotspot.addEventListener("keyup", (event) => {
+      if (event.key === " " || event.key === "Enter") {
+        endHold(event);
+      }
+    });
+
+    loadAssetsFromFirebase();
+  </script>
+</body>
+</html>
