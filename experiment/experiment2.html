@@ -52,10 +52,8 @@
       transform: translate(-50%, -50%);
       cursor: pointer;
       touch-action: none;
-      -webkit-user-select: none;
       user-select: none;
       box-shadow: 0 0 40px rgba(255, 0, 0, 0.12);
-      transition: transform 0.2s ease, background 0.2s ease;
     }
 
     .hotspot.is-holding {
@@ -68,14 +66,11 @@
       top: 14px;
       left: 14px;
       z-index: 10;
-      max-width: min(90%, 520px);
       padding: 10px 12px;
       border-radius: 12px;
       background: rgba(0, 0, 0, 0.45);
       color: rgba(255, 255, 255, 0.92);
-      font-size: 0.82rem;
-      line-height: 1.35;
-      backdrop-filter: blur(6px);
+      font-size: 0.8rem;
       white-space: pre-line;
     }
 
@@ -85,12 +80,7 @@
       display: grid;
       align-items: end;
       pointer-events: none;
-      background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.34) 0%,
-        rgba(0, 0, 0, 0.08) 28%,
-        rgba(0, 0, 0, 0) 55%
-      );
+      background: linear-gradient(to top, rgba(0,0,0,0.35), transparent);
       opacity: 0;
       transition: opacity 0.4s ease;
     }
@@ -100,247 +90,180 @@
     }
 
     .poem-box {
-      padding: 28px 30px 34px;
-      max-width: 72ch;
+      padding: 30px;
     }
 
     .poem {
-      margin: 0;
-      color: rgba(255, 255, 255, 0.96);
-      font-size: clamp(1rem, 1.25vw, 1.35rem);
-      line-height: 1.7;
-      white-space: pre-line;
+      color: white;
+      font-size: 1.2rem;
+      line-height: 1.6;
       opacity: 0;
-      transition: opacity 0.18s linear;
-      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
-    }
-
-    @media (max-width: 900px) {
-      .scene {
-        width: 100vw;
-        height: 100vh;
-        max-height: none;
-        aspect-ratio: auto;
-      }
-
-      .poem-box {
-        padding: 22px 18px 28px;
-      }
-
-      .hotspot {
-        width: 42mm;
-        height: 42mm;
-      }
+      transition: opacity 0.2s linear;
+      white-space: pre-line;
     }
   </style>
 </head>
+
 <body>
-  <div class="scene" id="scene">
-    <div class="status" id="status">Initializing…</div>
 
-    <img src="../gallery/images/R0010140.jpeg" alt="Photodiary image" />
+<div class="scene" id="scene">
+  <div class="status" id="status">Loading...</div>
 
-    <div
-      class="hotspot"
-      id="hotspot"
-      style="top: 55%; left: 60%;"
-      aria-label="Interactive hotspot"
-      role="button"
-      tabindex="0"
-    ></div>
+  <img src="../gallery/images/R0010140.jpeg" />
 
-    <div class="poem-layer">
-      <div class="poem-box">
-        <p class="poem" id="poem"></p>
-      </div>
+  <div class="hotspot" id="hotspot" style="top:55%; left:60%;"></div>
+
+  <div class="poem-layer">
+    <div class="poem-box">
+      <p class="poem" id="poem"></p>
     </div>
   </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+<script type="module">
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
-      authDomain: "photodiarygame.firebaseapp.com",
-      projectId: "photodiarygame",
-      storageBucket: "photodiarygame.firebasestorage.app",
-      messagingSenderId: "745003978989",
-      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
-      measurementId: "G-1T7CBFRP55"
-    };
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
+// 🔥 FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+  authDomain: "photodiarygame.firebaseapp.com",
+  projectId: "photodiarygame",
+  storageBucket: "photodiarygame.firebasestorage.app",
+  messagingSenderId: "745003978989",
+  appId: "1:745003978989:web:727489ba72b34d77af3ce4"
+};
 
-    const scene = document.getElementById("scene");
-    const hotspot = document.getElementById("hotspot");
-    const poemEl = document.getElementById("poem");
-    const statusEl = document.getElementById("status");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-    let poems = ["Fog stays longer than memory."];
-    let audio = null;
-    let assetsReady = false;
+// ELEMENTIT
+const scene = document.getElementById("scene");
+const hotspot = document.getElementById("hotspot");
+const poemEl = document.getElementById("poem");
+const statusEl = document.getElementById("status");
 
-    let progress = 0;
-    let holding = false;
-    let currentPoem = poems[0];
-    let hasPickedPoemForCurrentHold = false;
+// DATA
+let poems = ["Fallback poem"];
+let audio = null;
+let assetsReady = false;
 
-    function setStatus(message) {
-      statusEl.textContent = message;
+let progress = 0;
+let holding = false;
+let currentPoem = poems[0];
+
+// 🔥 EI samaa runoa peräkkäin
+let lastPoemIndex = -1;
+
+function randomItem(arr) {
+  if (!arr || arr.length === 0) return null;
+  if (arr.length === 1) return arr[0];
+
+  let index;
+  do {
+    index = Math.floor(Math.random() * arr.length);
+  } while (index === lastPoemIndex);
+
+  lastPoemIndex = index;
+  return arr[index];
+}
+
+// 🔥 LATAUS
+async function loadData() {
+  try {
+    const refDoc = doc(db, "experiments", "experiment2");
+    const snap = await getDoc(refDoc);
+
+    if (!snap.exists()) {
+      statusEl.textContent = "Document not found";
+      assetsReady = true;
+      return;
     }
 
-    function randomItem(arr) {
-      if (!Array.isArray(arr) || arr.length === 0) return null;
-      const index = Math.floor(Math.random() * arr.length);
-      return arr[index];
+    const data = snap.data();
+
+    if (Array.isArray(data.poems)) {
+      poems = data.poems;
     }
 
-    async function loadData() {
-      setStatus("Connecting to Firebase…");
+    currentPoem = randomItem(poems);
 
-      try {
-        const refDoc = doc(db, "experiments", "experiment2");
-        const snap = await getDoc(refDoc);
-
-        if (!snap.exists()) {
-          poemEl.textContent = currentPoem;
-          assetsReady = true;
-          setStatus(
-            "Firestore connected.\n" +
-            "Document not found: experiments / experiment2\n" +
-            "Using fallback poem."
-          );
-          return;
-        }
-
-        const data = snap.data();
-
-        if (Array.isArray(data.poems) && data.poems.length > 0) {
-          poems = data.poems.filter(item => typeof item === "string" && item.trim() !== "");
-        } else if (typeof data.poemText === "string" && data.poemText.trim() !== "") {
-          poems = [data.poemText];
-        }
-
-        currentPoem = randomItem(poems) || "Fog stays longer than memory.";
-        poemEl.textContent = currentPoem;
-
-        let audioMessage = "No audioPath in document.";
-
-        if (typeof data.audioPath === "string" && data.audioPath.trim() !== "") {
-          try {
-            const url = await getDownloadURL(ref(storage, data.audioPath));
-            audio = new Audio(url);
-            audio.loop = true;
-            audio.volume = 0;
-            audio.preload = "auto";
-            audioMessage = `Audio loaded: ${data.audioPath}`;
-          } catch (audioError) {
-            audioMessage = `Audio failed: ${data.audioPath}`;
-          }
-        }
-
-        assetsReady = true;
-        setStatus(
-          "Firebase OK.\n" +
-          `Poems loaded: ${poems.length}\n` +
-          audioMessage + "\n\n" +
-          "Hold the red circle."
-        );
-      } catch (error) {
-        poemEl.textContent = currentPoem;
-        assetsReady = true;
-        setStatus(
-          "Firebase failed.\n" +
-          "Using fallback poem.\n\n" +
-          "Most likely reasons:\n" +
-          "1. Firestore rules block reading\n" +
-          "2. Wrong collection/doc path\n" +
-          "3. Storage path missing"
-        );
-      }
+    if (data.audioPath) {
+      const url = await getDownloadURL(ref(storage, data.audioPath));
+      audio = new Audio(url);
+      audio.loop = true;
+      audio.volume = 0;
     }
 
-    function update() {
-      if (holding && assetsReady) {
-        progress += 0.02;
-      } else {
-        progress -= 0.03;
-      }
+    statusEl.textContent = `Poems loaded: ${poems.length}`;
+    assetsReady = true;
 
-      progress = Math.max(0, Math.min(1, progress));
+  } catch (e) {
+    statusEl.textContent = "Firebase error";
+    assetsReady = true;
+  }
+}
 
-      scene.classList.toggle("active", progress > 0.01);
-      hotspot.classList.toggle("is-holding", progress > 0.01);
+// 🔥 ANIMAATIO
+function update() {
+  if (holding && assetsReady) {
+    progress += 0.02;
+  } else {
+    progress -= 0.03;
+  }
 
-      poemEl.style.opacity = progress.toFixed(3);
-      poemEl.textContent = currentPoem;
+  progress = Math.max(0, Math.min(1, progress));
 
-      if (audio) {
-        audio.volume = 0.45 * progress;
-      }
+  scene.classList.toggle("active", progress > 0);
+  hotspot.classList.toggle("is-holding", progress > 0);
 
-      if (progress > 0 && audio && audio.paused) {
-        audio.play().catch(() => {});
-      }
+  poemEl.style.opacity = progress;
+  poemEl.textContent = currentPoem;
 
-      if (progress === 0 && audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
+  if (audio) {
+    audio.volume = progress * 0.5;
+  }
 
-      requestAnimationFrame(update);
-    }
+  if (progress > 0 && audio && audio.paused) {
+    audio.play().catch(()=>{});
+  }
 
-    function beginHold(event) {
-      event.preventDefault();
+  if (progress === 0 && audio) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
 
-      if (!assetsReady) return;
+  requestAnimationFrame(update);
+}
 
-      if (!hasPickedPoemForCurrentHold) {
-        currentPoem = randomItem(poems) || currentPoem;
-        poemEl.textContent = currentPoem;
-        hasPickedPoemForCurrentHold = true;
-      }
+// 🔥 HOLD
+function beginHold(e) {
+  e.preventDefault();
+  if (!assetsReady) return;
 
-      holding = true;
-    }
+  // 🔥 uusi runo joka kerta
+  currentPoem = randomItem(poems);
 
-    function endHold(event) {
-      if (event) event.preventDefault();
-      holding = false;
-      hasPickedPoemForCurrentHold = false;
-    }
+  holding = true;
+}
 
-    hotspot.addEventListener("pointerdown", beginHold);
-    hotspot.addEventListener("pointerup", endHold);
-    hotspot.addEventListener("pointerleave", endHold);
-    hotspot.addEventListener("pointercancel", endHold);
+function endHold(e) {
+  if (e) e.preventDefault();
+  holding = false;
+}
 
-    hotspot.addEventListener("touchstart", beginHold, { passive: false });
-    hotspot.addEventListener("touchend", endHold, { passive: false });
-    hotspot.addEventListener("touchcancel", endHold, { passive: false });
+// EVENTS
+hotspot.addEventListener("pointerdown", beginHold);
+window.addEventListener("pointerup", endHold);
 
-    hotspot.addEventListener("mousedown", beginHold);
-    hotspot.addEventListener("mouseup", endHold);
+// INIT
+loadData();
+update();
 
-    hotspot.addEventListener("keydown", (event) => {
-      if (event.key === " " || event.key === "Enter") {
-        beginHold(event);
-      }
-    });
+</script>
 
-    hotspot.addEventListener("keyup", (event) => {
-      if (event.key === " " || event.key === "Enter") {
-        endHold(event);
-      }
-    });
-
-    loadData();
-    update();
-  </script>
 </body>
 </html>
