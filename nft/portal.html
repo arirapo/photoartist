@@ -1,1 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trace / Entry</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: Georgia, "Times New Roman", serif;
+    }
 
+    #stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      opacity: 0;
+      transition:
+        opacity 1.8s ease,
+        filter 0.45s ease;
+      filter: blur(0px);
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    #image.loaded {
+      opacity: 1;
+    }
+
+    #image.active {
+      filter: blur(12px);
+    }
+
+    #date {
+      position: absolute;
+      left: 2.2rem;
+      bottom: 1.6rem;
+      color: rgba(255,255,255,0.72);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+
+    #date.visible {
+      opacity: 1;
+    }
+
+    #text {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(78vw, 720px);
+      text-align: center;
+      color: rgba(255,255,255,0.9);
+      font-size: clamp(1rem, 2vw, 1.55rem);
+      line-height: 1.45;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      z-index: 12;
+      pointer-events: none;
+      text-wrap: balance;
+    }
+
+    #text.visible {
+      opacity: 1;
+    }
+
+    #dot {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center,
+          rgba(255,110,110,0.92) 0%,
+          rgba(220,50,50,0.82) 50%,
+          rgba(120,0,0,0.58) 75%,
+          rgba(50,0,0,0.18) 100%);
+      box-shadow:
+        0 0 10px rgba(255, 80, 80, 0.35),
+        0 0 26px rgba(160, 20, 20, 0.18);
+      transform: translate(-50%, -50%);
+      z-index: 15;
+      cursor: pointer;
+      opacity: 0;
+      transition:
+        left 1.8s ease,
+        top 1.8s ease,
+        opacity 1.2s ease,
+        transform 0.1s ease;
+      touch-action: none;
+    }
+
+    #dot.visible {
+      opacity: 1;
+    }
+
+    #dot.pressed {
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    #hint {
+      position: absolute;
+      top: 1.4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.16);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      z-index: 5;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @media (max-width: 700px) {
+      #date {
+        left: 1rem;
+        bottom: 1rem;
+        font-size: 0.72rem;
+      }
+
+      #dot {
+        width: 24px;
+        height: 24px;
+      }
+
+      #hint {
+        top: 1rem;
+        font-size: 0.66rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <div id="hint">trace</div>
+    <img id="image" alt="" />
+    <div id="date"></div>
+    <div id="text"></div>
+    <div id="dot" aria-label="interactive point"></div>
+
+    <!-- Preload / reuse audio element -->
+    <audio id="audio" preload="auto"></audio>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <script>
+    // ---- CONFIG ----
+    const imageFolder = "./assets/images/";
+    const audioFolder = "./assets/audio/";
+
+    // Vaihda näihin omat tiedostonimet
+    const images = [
+      "nft001.jpg",
+      "nft002.jpg",
+      "nft003.jpg",
+      "nft004.jpg",
+      "nft005.jpg"
+    ];
+
+    const sounds = [
+      "sound1.mp3",
+      "sound2.mp3",
+      "sound3.mp3",
+      "sound4.mp3"
+    ];
+
+    const phrases = [
+      "this was not stored",
+      "no version remains",
+      "encounter only",
+      "a trace without return",
+      "what appears is not kept",
+      "the image arrived elsewhere",
+      "nothing here stays fixed",
+      "this entry does not preserve"
+    ];
+
+    // ---- ELEMENTS ----
+    const stage = document.getElementById("stage");
+    const img = document.getElementById("image");
+    const dateEl = document.getElementById("date");
+    const textEl = document.getElementById("text");
+    const dot = document.getElementById("dot");
+    const audio = document.getElementById("audio");
+
+    let currentPhrase = "";
+    let currentSound = "";
+    let isPressing = false;
+
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function formatExifDate(exifDate) {
+      // EXIF: "YYYY:MM:DD HH:MM:SS"
+      if (!exifDate || typeof exifDate !== "string") return "";
+      const match = exifDate.match(/^(\d{4}):(\d{2}):(\d{2})/);
+      if (!match) return exifDate;
+      const [, y, m, d] = match;
+      return `${y}-${m}-${d}`;
+    }
+
+    function moveDotRandom() {
+      const marginX = stage.clientWidth * 0.12;
+      const marginY = stage.clientHeight * 0.12;
+
+      const x = marginX + Math.random() * (stage.clientWidth - marginX * 2);
+      const y = marginY + Math.random() * (stage.clientHeight - marginY * 2);
+
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+    }
+
+    function stopAudio() {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.removeAttribute("src");
+      audio.load();
+    }
+
+    function activatePortal() {
+      if (isPressing) return;
+      isPressing = true;
+
+      currentPhrase = randomItem(phrases);
+      currentSound = randomItem(sounds);
+
+      img.classList.add("active");
+      textEl.textContent = currentPhrase;
+      textEl.classList.add("visible");
+      dot.classList.add("pressed");
+
+      audio.src = audioFolder + currentSound;
+      audio.volume = 0.9;
+      audio.play().catch(() => {
+        // Autoplay may fail silently until user gesture is fully recognized
+      });
+    }
+
+    function deactivatePortal() {
+      if (!isPressing) return;
+      isPressing = false;
+
+      img.classList.remove("active");
+      textEl.classList.remove("visible");
+      dot.classList.remove("pressed");
+
+      stopAudio();
+
+      setTimeout(() => {
+        moveDotRandom();
+      }, 120);
+    }
+
+    function setupPressEvents(el) {
+      el.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        activatePortal();
+      });
+
+      el.addEventListener("pointerup", (e) => {
+        e.preventDefault();
+        deactivatePortal();
+      });
+
+      el.addEventListener("pointerleave", () => {
+        deactivatePortal();
+      });
+
+      el.addEventListener("pointercancel", () => {
+        deactivatePortal();
+      });
+
+      // fallback for touch quirks
+      el.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        activatePortal();
+      }, { passive: false });
+
+      el.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        deactivatePortal();
+      }, { passive: false });
+    }
+
+    function loadRandomImage() {
+      const file = randomItem(images);
+      const src = imageFolder + file;
+
+      img.onload = () => {
+        img.classList.add("loaded");
+
+        setTimeout(() => {
+          dateEl.classList.add("visible");
+          dot.classList.add("visible");
+          moveDotRandom();
+        }, 1400);
+
+        EXIF.getData(img, function () {
+          const exifDate =
+            EXIF.getTag(this, "DateTimeOriginal") ||
+            EXIF.getTag(this, "DateTime") ||
+            "";
+
+          const formatted = formatExifDate(exifDate);
+          dateEl.textContent = formatted || "";
+        });
+      };
+
+      img.onerror = () => {
+        dateEl.textContent = "";
+        img.classList.add("loaded");
+        dot.classList.add("visible");
+        moveDotRandom();
+      };
+
+      img.src = src;
+    }
+
+    setupPressEvents(dot);
+    loadRandomImage();
+
+    window.addEventListener("resize", () => {
+      moveDotRandom();
+    });
+  </script>
+</body>
+</html>
