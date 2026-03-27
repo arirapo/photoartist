@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Photodiary Experiment</title>
 
+<style>
+body {
+  margin: 0;
+  background: #111;
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  font-family: sans-serif;
+}
+
+.container {
+  position: relative;
+  max-width: 900px;
+  width: 90vw;
+}
+
+img {
+  width: 100%;
+  display: block;
+  transition: filter 0.8s ease, transform 0.8s ease;
+}
+
+.hotspot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.4s ease;
+}
+
+.container:hover .hotspot {
+  opacity: 1;
+}
+
+.hotspot:hover {
+  transform: translate(-50%, -50%) scale(1.4);
+}
+
+.text {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  color: white;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.active img {
+  filter: blur(6px) brightness(0.7);
+  transform: scale(1.02);
+}
+
+.active .text {
+  opacity: 1;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="container">
+
+  <!-- Vaihda tähän oma kuvasi -->
+  <img id="image" src="../gallery/images/R0010140.jpeg" />
+
+  <!-- yksi hotspot -->
+  <div class="hotspot" id="hotspot" style="top: 55%; left: 60%;"></div>
+
+  <div class="text" id="text">
+    This moment does not explain itself.  
+    It waits.
+  </div>
+
+</div>
+
+<script>
+const container = document.getElementById("container");
+const hotspot = document.getElementById("hotspot");
+
+hotspot.addEventListener("click", () => {
+  container.classList.add("active");
+
+  setTimeout(() => {
+    container.classList.remove("active");
+  }, 2500);
+});
+</script>
+
+</body>
+</html>
