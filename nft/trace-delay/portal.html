@@ -74,7 +74,7 @@
         transform 0.15s ease;
       z-index: 30;
       cursor: pointer;
-      touch-action: none;
+      touch-action: manipulation;
     }
 
     #dot.visible {
@@ -137,26 +137,30 @@
       dot.style.top = `${y}px`;
     }
 
-    async function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
+    function initAudio() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
 
-      if (audioCtx.state === "suspended") {
-        await audioCtx.resume();
-      }
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
 
-      if (!oscillator) {
-        oscillator = audioCtx.createOscillator();
-        gainNode = audioCtx.createGain();
+        if (!oscillator) {
+          oscillator = audioCtx.createOscillator();
+          gainNode = audioCtx.createGain();
 
-        oscillator.type = "sine";
-        oscillator.frequency.value = 72;
-        gainNode.gain.value = 0.0001;
+          oscillator.type = "sine";
+          oscillator.frequency.value = 72;
+          gainNode.gain.value = 0.0001;
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.start();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.start();
+        }
+      } catch (err) {
+        console.log("Audio init failed:", err);
       }
     }
 
@@ -183,15 +187,11 @@
       }, 1700);
     }
 
-    async function startSequence() {
+    function startSequence() {
       if (started) return;
       started = true;
 
-      try {
-        await initAudio();
-      } catch (err) {
-        console.log("Audio init failed:", err);
-      }
+      initAudio();
 
       dot.classList.add("pressed");
       setTimeout(() => dot.classList.add("hidden"), 500);
@@ -201,7 +201,7 @@
 
       // ääni alkaa 5 sekunnin kohdalla
       setTimeout(() => {
-        fadeVolume(0.025, 8);
+        fadeVolume(0.03, 8);
       }, 5000);
 
       // kuva alkaa näkyä 20 sekunnin kohdalla
@@ -213,7 +213,7 @@
 
       // ääni voimakkaimmillaan juuri ennen täyttä näkyvyyttä
       setTimeout(() => {
-        fadeVolume(0.09, 3);
+        fadeVolume(0.10, 3);
       }, 28000);
 
       // whiteout alkaa
@@ -245,12 +245,10 @@
       dot.classList.add("visible");
     }, 1200);
 
-    dot.addEventListener("click", startSequence);
-
-    dot.addEventListener("touchstart", async (e) => {
+    dot.addEventListener("pointerdown", function (e) {
       e.preventDefault();
-      await startSequence();
-    }, { passive: false });
+      startSequence();
+    });
 
     window.addEventListener("resize", moveDotRandom);
   </script>
