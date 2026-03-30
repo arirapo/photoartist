@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trace / Delay</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      position: relative;
+      transition: background 5s linear;
+    }
+
+    #image {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      max-width: 82vw;
+      max-height: 82vh;
+      object-fit: contain;
+      opacity: 0;
+      transition:
+        opacity 10s linear,
+        filter 5s linear;
+      filter: brightness(0);
+      pointer-events: none;
+    }
+
+    #text {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255,255,255,0.88);
+      font-size: clamp(18px, 2vw, 28px);
+      letter-spacing: 0.03em;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 3s ease;
+      pointer-events: none;
+      z-index: 20;
+      width: min(80vw, 900px);
+    }
+
+    #dot {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center,
+          rgba(255,110,110,0.95) 0%,
+          rgba(215,50,50,0.82) 48%,
+          rgba(120,0,0,0.56) 76%,
+          rgba(40,0,0,0.15) 100%);
+      box-shadow:
+        0 0 12px rgba(255, 70, 70, 0.35),
+        0 0 26px rgba(120, 10, 10, 0.2);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition:
+        left 1.5s ease,
+        top 1.5s ease,
+        opacity 2s ease,
+        transform 0.15s ease;
+      z-index: 30;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    #dot.visible {
+      opacity: 1;
+    }
+
+    #dot.pressed {
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .whiteout {
+      background: white !important;
+    }
+
+    .whiteout #image {
+      filter: brightness(4.5);
+    }
+
+    .hidden {
+      opacity: 0 !important;
+    }
+  </style>
+</head>
+<body>
+
+  <img id="image" alt="" />
+  <div id="text">please wait</div>
+  <div id="dot" aria-label="start"></div>
+
+  <script>
+    const images = [
+      "assets/IMG_0274.jpeg",
+      "assets/IMG_0348.jpeg",
+      "assets/IMG_5502.jpeg",
+      "assets/IMG_5503.jpeg",
+      "assets/IMG_5504.jpeg"
+    ];
+
+    const img = document.getElementById("image");
+    const text = document.getElementById("text");
+    const dot = document.getElementById("dot");
+
+    let audioCtx = null;
+    let oscillator = null;
+    let gainNode = null;
+    let started = false;
+
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function moveDotRandom() {
+      const marginX = window.innerWidth * 0.14;
+      const marginY = window.innerHeight * 0.14;
+
+      const x = marginX + Math.random() * (window.innerWidth - marginX * 2);
+      const y = marginY + Math.random() * (window.innerHeight - marginY * 2);
+
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+    }
+
+    function createTone() {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      oscillator = audioCtx.createOscillator();
+      gainNode = audioCtx.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.value = 72;   // matala, vakaa taajuus
+      gainNode.gain.value = 0.0001;      // lähes äänetön alussa
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+    }
+
+    function fadeVolume(target, durationSec) {
+      if (!audioCtx || !gainNode) return;
+      const now = audioCtx.currentTime;
+      gainNode.gain.cancelScheduledValues(now);
+      gainNode.gain.linearRampToValueAtTime(target, now + durationSec);
+    }
+
+    function stopTone() {
+      if (!audioCtx || !oscillator || !gainNode) return;
+
+      const now = audioCtx.currentTime;
+      gainNode.gain.cancelScheduledValues(now);
+      gainNode.gain.linearRampToValueAtTime(0.0001, now + 1.5);
+
+      setTimeout(() => {
+        try { oscillator.stop(); } catch (e) {}
+      }, 1700);
+    }
+
+    function startSequence() {
+      if (started) return;
+      started = true;
+
+      dot.classList.add("pressed");
+      setTimeout(() => dot.classList.add("hidden"), 500);
+
+      createTone();
+
+      // teksti näkyviin heti
+      text.textContent = "please wait";
+      text.style.opacity = 1;
+
+      // ääni alkaa 5 sekunnin kohdalla, hyvin hiljaa
+      setTimeout(() => {
+        fadeVolume(0.025, 8);
+      }, 5000);
+
+      // kuva alkaa tulla näkyviin 20 sekunnin kohdalla
+      setTimeout(() => {
+        text.style.opacity = 0;
+        img.style.opacity = 1;
+        img.style.filter = "brightness(1)";
+      }, 20000);
+
+      // kuva täysin näkyvissä, ääni voimakkaimmillaan
+      setTimeout(() => {
+        fadeVolume(0.09, 3);
+      }, 28000);
+
+      // whiteout alkaa
+      setTimeout(() => {
+        document.body.classList.add("whiteout");
+        fadeVolume(0.015, 5);
+      }, 35000);
+
+      // katkos mustaan
+      setTimeout(() => {
+        document.body.classList.remove("whiteout");
+        document.body.style.background = "black";
+        img.style.opacity = 0;
+        img.style.filter = "brightness(0)";
+        stopTone();
+      }, 40000);
+
+      // lopputeksti
+      setTimeout(() => {
+        text.textContent = "Everything happens in-between and in delay.";
+        text.style.opacity = 1;
+      }, 43000);
+    }
+
+    // satunnainen kuva
+    img.src = randomItem(images);
+
+    // piste näkyviin
+    moveDotRandom();
+    setTimeout(() => {
+      dot.classList.add("visible");
+    }, 1200);
+
+    dot.addEventListener("click", startSequence);
+    dot.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      startSequence();
+    }, { passive: false });
+
+    window.addEventListener("resize", moveDotRandom);
+  </script>
+</body>
+</html>
