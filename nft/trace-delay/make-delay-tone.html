@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Generate delay-tone.wav</title>
+<style>
+body{
+font-family:sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+background:#111;
+color:white;
+}
+button{
+font-size:22px;
+padding:18px 28px;
+}
+</style>
+</head>
+<body>
+
+<button id="btn">Generate delay-tone.wav</button>
+
+<script>
+
+document.getElementById("btn").onclick = () => {
+
+const sampleRate = 44100
+const duration = 50
+const freq = 160
+
+const samples = sampleRate * duration
+const buffer = new Float32Array(samples)
+
+for(let i=0;i<samples;i++){
+let t = i/sampleRate
+buffer[i] = Math.sin(2*Math.PI*freq*t)
+}
+
+/* fade in/out */
+const fadeIn = sampleRate*0.3
+const fadeOut = sampleRate*0.5
+
+for(let i=0;i<fadeIn;i++){
+buffer[i] *= i/fadeIn
+}
+
+for(let i=0;i<fadeOut;i++){
+let idx = samples-i-1
+buffer[idx] *= i/fadeOut
+}
+
+/* convert to WAV */
+const wavBuffer = new ArrayBuffer(44 + samples*2)
+const view = new DataView(wavBuffer)
+
+function writeStr(offset,str){
+for(let i=0;i<str.length;i++)
+view.setUint8(offset+i,str.charCodeAt(i))
+}
+
+writeStr(0,"RIFF")
+view.setUint32(4,36+samples*2,true)
+writeStr(8,"WAVE")
+
+writeStr(12,"fmt ")
+view.setUint32(16,16,true)
+view.setUint16(20,1,true)
+view.setUint16(22,1,true)
+view.setUint32(24,sampleRate,true)
+view.setUint32(28,sampleRate*2,true)
+view.setUint16(32,2,true)
+view.setUint16(34,16,true)
+
+writeStr(36,"data")
+view.setUint32(40,samples*2,true)
+
+let offset=44
+
+for(let i=0;i<samples;i++){
+let s = Math.max(-1,Math.min(1,buffer[i]))
+view.setInt16(offset,s*32767,true)
+offset+=2
+}
+
+const blob = new Blob([view],{type:"audio/wav"})
+const url = URL.createObjectURL(blob)
+
+const a = document.createElement("a")
+a.href=url
+a.download="delay-tone.wav"
+a.click()
+
+URL.revokeObjectURL(url)
+
+}
+
+</script>
+</body>
+</html>
