@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trace / Delay</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      position: relative;
+      transition: background 5s linear;
+    }
+
+    #image {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      max-width: 82vw;
+      max-height: 82vh;
+      object-fit: contain;
+      opacity: 0;
+      transition:
+        opacity 10s linear,
+        filter 5s linear;
+      filter: brightness(0);
+      pointer-events: none;
+    }
+
+    #text {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255,255,255,0.88);
+      font-size: clamp(18px, 2vw, 28px);
+      letter-spacing: 0.03em;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 3s ease;
+      pointer-events: none;
+      z-index: 20;
+      width: min(80vw, 900px);
+      padding: 0 1rem;
+      box-sizing: border-box;
+    }
+
+    #dot {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center,
+          rgba(255,110,110,0.95) 0%,
+          rgba(215,50,50,0.82) 48%,
+          rgba(120,0,0,0.56) 76%,
+          rgba(40,0,0,0.15) 100%);
+      box-shadow:
+        0 0 12px rgba(255, 70, 70, 0.35),
+        0 0 26px rgba(120, 10, 10, 0.2);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition:
+        left 1.5s ease,
+        top 1.5s ease,
+        opacity 2s ease,
+        transform 0.15s ease;
+      z-index: 30;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    #dot.visible {
+      opacity: 1;
+    }
+
+    #dot.pressed {
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .whiteout {
+      background: white !important;
+    }
+
+    .whiteout #image {
+      filter: brightness(4.5);
+    }
+
+    .hidden {
+      opacity: 0 !important;
+    }
+  </style>
+</head>
+<body>
+
+  <img id="image" alt="" />
+  <div id="text">please wait</div>
+  <div id="dot" aria-label="start"></div>
+
+  <audio id="tone" preload="auto" playsinline>
+    <source src="assets/delay-tone.wav" type="audio/wav">
+  </audio>
+
+  <script>
+    const images = [
+      "assets/IMG_0274.jpeg",
+      "assets/IMG_0348.jpeg",
+      "assets/IMG_5502.jpeg",
+      "assets/IMG_5503.jpeg",
+      "assets/IMG_5504.jpeg"
+    ];
+
+    const img = document.getElementById("image");
+    const text = document.getElementById("text");
+    const dot = document.getElementById("dot");
+    const tone = document.getElementById("tone");
+
+    let started = false;
+
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function moveDotRandom() {
+      const marginX = window.innerWidth * 0.14;
+      const marginY = window.innerHeight * 0.14;
+
+      const x = marginX + Math.random() * (window.innerWidth - marginX * 2);
+      const y = marginY + Math.random() * (window.innerHeight - marginY * 2);
+
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+    }
+
+    function rampVolume(from, to, durationMs) {
+      const start = performance.now();
+      tone.volume = from;
+
+      function step(now) {
+        const progress = Math.min((now - start) / durationMs, 1);
+        tone.volume = from + (to - from) * progress;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    function startSequence() {
+      if (started) return;
+      started = true;
+
+      dot.classList.add("pressed");
+      setTimeout(() => dot.classList.add("hidden"), 500);
+
+      text.textContent = "please wait";
+      text.style.opacity = 1;
+
+      tone.volume = 0.01;
+      tone.currentTime = 0;
+
+      tone.play().catch(err => {
+        console.log("Audio play failed:", err);
+      });
+
+      // 5 s: ääni alkaa kunnolla kuulua
+      setTimeout(() => {
+        rampVolume(0.01, 0.08, 8000);
+      }, 5000);
+
+      // 20 s: kuva alkaa tulla näkyviin
+      setTimeout(() => {
+        text.style.opacity = 0;
+        img.style.opacity = 1;
+        img.style.filter = "brightness(1)";
+      }, 20000);
+
+      // 28 s: ääni voimakkaimmillaan ennen täyttä näkyvyyttä
+      setTimeout(() => {
+        rampVolume(tone.volume, 0.18, 2500);
+      }, 28000);
+
+      // 35 s: whiteout alkaa, ääni hiipuu mutta jatkuu
+      setTimeout(() => {
+        document.body.classList.add("whiteout");
+        rampVolume(tone.volume, 0.04, 5000);
+      }, 35000);
+
+      // 40 s: musta katkos, kuva pois, mutta ääni jatkuu vielä hetken
+      setTimeout(() => {
+        document.body.classList.remove("whiteout");
+        document.body.style.background = "black";
+        img.style.opacity = 0;
+        img.style.filter = "brightness(0)";
+      }, 40000);
+
+      // 40–44.5 s: ääni jatkuu mustassa ja hiipuu pois
+      setTimeout(() => {
+        rampVolume(tone.volume, 0.0, 4500);
+      }, 40000);
+
+      // 43 s: lopputeksti näkyviin mustalle
+      setTimeout(() => {
+        text.textContent = "Everything happens in-between and in delay.";
+        text.style.opacity = 1;
+      }, 43000);
+
+      // 45 s: ääni kokonaan pois
+      setTimeout(() => {
+        tone.pause();
+        tone.currentTime = 0;
+      }, 45000);
+    }
+
+    img.src = randomItem(images);
+
+    moveDotRandom();
+    setTimeout(() => {
+      dot.classList.add("visible");
+    }, 1200);
+
+    dot.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startSequence();
+    });
+
+    window.addEventListener("resize", moveDotRandom);
+  </script>
+</body>
+</html>
