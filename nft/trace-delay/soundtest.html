@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sound Test</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    button {
+      font-size: 24px;
+      padding: 20px 30px;
+    }
+  </style>
+</head>
+<body>
+  <button id="btn">Start sound</button>
+
+  <script>
+    let ctx, osc, gain;
+
+    document.getElementById("btn").addEventListener("click", async () => {
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        await ctx.resume();
+
+        osc = ctx.createOscillator();
+        gain = ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.value = 440;
+        gain.gain.value = 0.15;
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+
+        setTimeout(() => {
+          gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1);
+          setTimeout(() => osc.stop(), 1100);
+        }, 1500);
+
+      } catch (err) {
+        console.log(err);
+        alert("Audio failed: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
