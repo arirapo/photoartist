@@ -1,1 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Trace / Delay</title>
 
+<style>
+body{
+background:black;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+font-family:Helvetica, Arial, sans-serif;
+overflow:hidden;
+}
+
+#text{
+position:absolute;
+font-size:20px;
+opacity:0;
+transition:opacity 3s;
+}
+
+#image{
+position:absolute;
+max-width:80vw;
+max-height:80vh;
+opacity:0;
+transition:opacity 10s;
+}
+
+.white{
+background:white;
+transition:background 5s;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="text">please wait</div>
+<img id="image">
+
+<script>
+
+const images = [
+"skull1.jpg",
+"skull2.jpg",
+"skull3.jpg",
+"skull4.jpg",
+"skull5.jpg"
+]
+
+const img = document.getElementById("image")
+const text = document.getElementById("text")
+
+img.src = images[Math.floor(Math.random()*images.length)]
+
+let audioCtx
+let osc
+
+function startTone(){
+
+audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+osc = audioCtx.createOscillator()
+
+osc.type="sine"
+osc.frequency.value=80
+
+osc.connect(audioCtx.destination)
+osc.start()
+
+}
+
+function riseTone(){
+
+let freq = 80
+let interval=setInterval(()=>{
+freq += 40
+osc.frequency.value = freq
+
+if(freq>12000){
+clearInterval(interval)
+}
+},200)
+
+}
+
+setTimeout(()=>{
+text.style.opacity=1
+},1000)
+
+setTimeout(()=>{
+startTone()
+},5000)
+
+setTimeout(()=>{
+img.style.opacity=1
+},20000)
+
+setTimeout(()=>{
+document.body.classList.add("white")
+riseTone()
+},35000)
+
+setTimeout(()=>{
+document.body.style.background="black"
+img.style.opacity=0
+text.innerHTML="Everything happens in-between and in delay."
+text.style.opacity=1
+if(osc)osc.stop()
+},40000)
+
+</script>
+
+</body>
+</html>
