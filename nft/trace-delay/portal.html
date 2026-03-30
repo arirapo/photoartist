@@ -178,7 +178,7 @@
       const now = audioCtx.currentTime;
       gainNode.gain.cancelScheduledValues(now);
       gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-      gainNode.gain.linearRampToValueAtTime(0.0001, now + 1.5);
+      gainNode.gain.linearRampToValueAtTime(0.001, now + 1.5);
 
       setTimeout(() => {
         try { oscillator.stop(); } catch (e) {}
@@ -201,7 +201,7 @@
 
       // ääni alkaa 5 sekunnin kohdalla
       setTimeout(() => {
-        fadeVolume(0.03, 8);
+        fadeVolume(0.08, 8);
       }, 5000);
 
       // kuva alkaa näkyä 20 sekunnin kohdalla
@@ -213,7 +213,7 @@
 
       // ääni voimakkaimmillaan juuri ennen täyttä näkyvyyttä
       setTimeout(() => {
-        fadeVolume(0.10, 3);
+        fadeVolume(0.18, 3);
       }, 28000);
 
       // whiteout alkaa
