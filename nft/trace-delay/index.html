@@ -5,8 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trace / Delay</title>
   <script>
-    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    window.location.replace(isMobile ? "./delay-mobile.html" : "./portal.html");
+    function isMobileDevice() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+
+      const mobileUA =
+        /android|iphone|ipad|ipod|mobile|blackberry|iemobile|opera mini/i.test(ua);
+
+      const touchMac =
+        navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+
+      const smallTouchScreen =
+        window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 1100;
+
+      return mobileUA || touchMac || smallTouchScreen;
+    }
+
+    if (isMobileDevice()) {
+      window.location.replace("./delay-mobile.html");
+    } else {
+      window.location.replace("./delay-desktop.html");
+    }
   </script>
 </head>
 <body></body>
