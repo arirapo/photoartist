@@ -28,7 +28,9 @@
       max-height: 82vh;
       object-fit: contain;
       opacity: 0;
-      transition: opacity 10s linear, filter 5s linear;
+      transition:
+        opacity 10s linear,
+        filter 5s linear;
       filter: brightness(0);
       pointer-events: none;
     }
@@ -47,6 +49,8 @@
       pointer-events: none;
       z-index: 20;
       width: min(80vw, 900px);
+      padding: 0 1rem;
+      box-sizing: border-box;
     }
 
     #dot {
@@ -65,26 +69,45 @@
         0 0 26px rgba(120, 10, 10, 0.2);
       transform: translate(-50%, -50%);
       opacity: 0;
-      transition: left 1.5s ease, top 1.5s ease, opacity 2s ease, transform 0.15s ease;
+      transition:
+        left 1.5s ease,
+        top 1.5s ease,
+        opacity 2s ease,
+        transform 0.15s ease;
       z-index: 30;
       cursor: pointer;
       touch-action: manipulation;
     }
 
-    #dot.visible { opacity: 1; }
-    #dot.pressed { transform: translate(-50%, -50%) scale(1.08); }
+    #dot.visible {
+      opacity: 1;
+    }
 
-    .whiteout { background: white !important; }
-    .whiteout #image { filter: brightness(4.5); }
-    .hidden { opacity: 0 !important; }
+    #dot.pressed {
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .whiteout {
+      background: white !important;
+    }
+
+    .whiteout #image {
+      filter: brightness(4.5);
+    }
+
+    .hidden {
+      opacity: 0 !important;
+    }
   </style>
 </head>
 <body>
+
   <img id="image" alt="" />
   <div id="text">please wait</div>
   <div id="dot" aria-label="start"></div>
+
   <audio id="tone" preload="auto" playsinline>
-    <source src="assets/delay-tone.mp3" type="audio/mpeg" />
+    <source src="assets/delay-tone.wav" type="audio/wav">
   </audio>
 
   <script>
@@ -110,8 +133,10 @@
     function moveDotRandom() {
       const marginX = window.innerWidth * 0.14;
       const marginY = window.innerHeight * 0.14;
+
       const x = marginX + Math.random() * (window.innerWidth - marginX * 2);
       const y = marginY + Math.random() * (window.innerHeight - marginY * 2);
+
       dot.style.left = `${x}px`;
       dot.style.top = `${y}px`;
     }
@@ -141,45 +166,63 @@
 
       tone.volume = 0.01;
       tone.currentTime = 0;
-      tone.play().catch(err => console.log("Audio play failed:", err));
 
+      tone.play().catch(err => {
+        console.log("Audio play failed:", err);
+      });
+
+      // 5 s: ääni alkaa kunnolla kuulua
       setTimeout(() => {
         rampVolume(0.01, 0.08, 8000);
       }, 5000);
 
+      // 20 s: kuva alkaa tulla näkyviin
       setTimeout(() => {
         text.style.opacity = 0;
         img.style.opacity = 1;
         img.style.filter = "brightness(1)";
       }, 20000);
 
+      // 28 s: ääni voimakkaimmillaan ennen täyttä näkyvyyttä
       setTimeout(() => {
         rampVolume(tone.volume, 0.18, 2500);
       }, 28000);
 
+      // 35 s: whiteout alkaa, ääni hiipuu mutta jatkuu
       setTimeout(() => {
         document.body.classList.add("whiteout");
-        rampVolume(tone.volume, 0.02, 5000);
+        rampVolume(tone.volume, 0.04, 5000);
       }, 35000);
 
+      // 40 s: musta katkos, kuva pois, mutta ääni jatkuu vielä hetken
       setTimeout(() => {
         document.body.classList.remove("whiteout");
         document.body.style.background = "black";
         img.style.opacity = 0;
         img.style.filter = "brightness(0)";
-        tone.pause();
-        tone.currentTime = 0;
       }, 40000);
 
+      // 40–44.5 s: ääni jatkuu mustassa ja hiipuu pois
+      setTimeout(() => {
+        rampVolume(tone.volume, 0.0, 4500);
+      }, 40000);
+
+      // 43 s: lopputeksti näkyviin mustalle
       setTimeout(() => {
         text.textContent = "Everything happens in-between and in delay.";
         text.style.opacity = 1;
       }, 43000);
+
+      // 45 s: ääni kokonaan pois
+      setTimeout(() => {
+        tone.pause();
+        tone.currentTime = 0;
+      }, 45000);
     }
 
     img.src = randomItem(images);
-    moveDotRandom();
 
+    moveDotRandom();
     setTimeout(() => {
       dot.classList.add("visible");
     }, 1200);
