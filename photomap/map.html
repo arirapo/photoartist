@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Photodiary Map</title>
+
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<style>
+
+html, body {
+height:100%;
+margin:0;
+}
+
+#map {
+height:100%;
+width:100%;
+}
+
+.popup-image {
+width:260px;
+border-radius:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+const map = L.map('map').setView([60.39,25.66],12)
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+maxZoom:19,
+attribution:'© OpenStreetMap'
+}
+).addTo(map)
+
+fetch('./data/photos.json')
+
+.then(r=>r.json())
+
+.then(photos=>{
+
+photos.forEach(photo=>{
+
+const marker = L.marker(
+[photo.lat,photo.lon]
+).addTo(map)
+
+let html = ""
+
+html += "<b>"+photo.title+"</b><br>"
+
+if(photo.image){
+
+html += "<img class='popup-image' src='"+photo.image+"'><br>"
+
+}
+
+if(photo.date){
+
+html += photo.date+"<br>"
+
+}
+
+if(photo.viewer_url){
+
+html += "<a href='"+photo.viewer_url+"' target='_blank'>360 view</a>"
+
+}
+
+marker.bindPopup(html)
+
+})
+
+})
+
+</script>
+
+</body>
+</html>
