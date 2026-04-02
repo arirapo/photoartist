@@ -1,21 +1,21 @@
 [
 {
-"filename":"example1.jpg",
+"filename":"R0010982.jpeg",
 "title":"Porvoonjoki",
 "date":"2026-03-29",
 "lat":60.3928,
 "lon":25.6655,
-"image":"./images/example1.jpg",
+"image":"./images/R0010982.jpeg",
 "viewer_url":""
 },
 
 {
-"filename":"example2.jpg",
+"filename":"IMG_2528.png",
 "title":"Takapiha",
 "date":"2026-03-28",
 "lat":60.401,
 "lon":25.67,
-"image":"./images/example2.jpg",
+"image":"./images/IMG_2528.png",
 "viewer_url":""
 }
 ]
