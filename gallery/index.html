@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Photoartist Gallery</title>
+  <link rel="stylesheet" href="./src/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1 class="site-title">Gallery</h1>
+  </header>
+
+  <main class="gallery-page">
+    <section class="gallery-container">
+      <div id="gallery-grid" class="gallery-grid" aria-live="polite"></div>
+      <p id="gallery-status" class="gallery-status">Loading images...</p>
+    </section>
+  </main>
+
+  <div
+    id="lightbox"
+    class="lightbox"
+    aria-hidden="true"
+    role="dialog"
+    aria-label="Expanded image view"
+  >
+    <button
+      id="lightbox-close"
+      class="lightbox-close"
+      type="button"
+      aria-label="Close image view"
+    >
+      ×
+    </button>
+
+    <button
+      id="lightbox-prev"
+      class="lightbox-nav lightbox-prev"
+      type="button"
+      aria-label="Previous image"
+    >
+      ‹
+    </button>
+
+    <div class="lightbox-content">
+      <img id="lightbox-image" src="" alt="" />
+      <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+
+    <button
+      id="lightbox-next"
+      class="lightbox-nav lightbox-next"
+      type="button"
+      aria-label="Next image"
+    >
+      ›
+    </button>
+  </div>
+
+  <script src="./src/js/gallery.js"></script>
+</body>
+</html>
