@@ -39,8 +39,13 @@ function init() {
 
 function bindControls() {
   if (printButton) {
-    printButton.addEventListener("click", () => {
-      window.print();
+printButton.addEventListener("click", () => {
+  setTimeout(() => {
+    window.print();
+  }, 100);
+});
+
+      
     });
   }
 
