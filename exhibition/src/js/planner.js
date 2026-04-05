@@ -41,6 +41,9 @@ const applyPresetButton = document.getElementById("apply-preset");
 
 const openPrintViewButton = document.getElementById("open-print-view");
 
+const assignImageSelect = document.getElementById("assign-image-select");
+const assignImageButton = document.getElementById("assign-image-button");
+
 let layoutData = null;
 let selectedArtworkId = null;
 let wallScale = 1;
@@ -182,6 +185,7 @@ function bindControls() {
   });
 
   on(addArtworkButton, "click", addArtworkFromForm);
+  on(assignImageButton, "click", assignImageToSelectedArtwork);
 
   on(editTitleInput, "input", () => {
     const artwork = getSelectedArtwork();
@@ -266,15 +270,28 @@ function populateWallInputs() {
 }
 
 function populateImageSelect() {
-  if (!imageSelect) return;
+  if (imageSelect) {
+    imageSelect.innerHTML = "";
+  }
 
-  imageSelect.innerHTML = "";
+  if (assignImageSelect) {
+    assignImageSelect.innerHTML = "";
+  }
 
   layoutData.availableImages.forEach((file) => {
-    const option = document.createElement("option");
-    option.value = file;
-    option.textContent = file;
-    imageSelect.appendChild(option);
+    if (imageSelect) {
+      const option = document.createElement("option");
+      option.value = file;
+      option.textContent = file;
+      imageSelect.appendChild(option);
+    }
+
+    if (assignImageSelect) {
+      const option = document.createElement("option");
+      option.value = file;
+      option.textContent = file;
+      assignImageSelect.appendChild(option);
+    }
   });
 }
 
@@ -469,6 +486,10 @@ function renderSelectedEditor() {
   if (editHeightInput) editHeightInput.value = artwork.heightCm;
   if (editXInput) editXInput.value = artwork.xCm;
   if (editYInput) editYInput.value = artwork.yCm;
+
+  if (assignImageSelect && artwork.file) {
+    assignImageSelect.value = artwork.file;
+  }
 }
 
 function renderJsonOutput() {
@@ -500,6 +521,19 @@ function addArtworkFromForm() {
 
   layoutData.artworks.push(artwork);
   selectedArtworkId = artwork.id;
+  renderAll();
+}
+
+function assignImageToSelectedArtwork() {
+  const artwork = getSelectedArtwork();
+  const file = assignImageSelect?.value;
+
+  if (!artwork || !file) return;
+
+  artwork.file = file;
+  artwork.title = file;
+  artwork.isPlaceholder = false;
+
   renderAll();
 }
 
