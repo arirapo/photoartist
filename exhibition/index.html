@@ -7,82 +7,196 @@
   <link rel="stylesheet" href="./src/css/styles.css" />
 </head>
 <body>
-   <header class="topbar">
+  <header class="topbar">
     <div class="topbar-inner">
       <h1>Exhibition Planner</h1>
       <p>Minimal mockup tool for simple wall layouts</p>
     </div>
 
-<div class="topbar-actions">
-  <button id="toggle-left-panel" class="button button-secondary" type="button">
-    Hide left panel
-  </button>
-  <button id="toggle-right-panel" class="button button-secondary" type="button">
-    Hide right panel
-  </button>
-  <button id="toggle-focus-mode" class="button button-secondary" type="button">
-    Focus mode
-  </button>
-  <button id="open-print-view" class="button button-ghost button-small" type="button">
-  Print
-</button>
-</div>
+    <div class="topbar-actions">
+      <button id="toggle-left-panel" class="button button-secondary" type="button">
+        Hide left panel
+      </button>
+      <button id="toggle-right-panel" class="button button-secondary" type="button">
+        Hide right panel
+      </button>
+      <button id="toggle-focus-mode" class="button button-secondary" type="button">
+        Focus mode
+      </button>
+      <button id="open-print-view" class="button button-ghost button-small" type="button">
+        Print
+      </button>
+    </div>
   </header>
 
-<main class="app-shell">
-  <aside class="panel panel-left">
-    <section class="panel-section">
-      <h2>Wall</h2>
-      ...
-    </section>
+  <main class="app-shell">
+    <aside class="panel panel-left">
+      <section class="panel-section">
+        <h2>Wall</h2>
+        <div class="field-grid">
+          <label>
+            Width (cm)
+            <input id="wall-width" type="number" min="50" step="1" />
+          </label>
+          <label>
+            Height (cm)
+            <input id="wall-height" type="number" min="50" step="1" />
+          </label>
+          <label>
+            Center line (cm)
+            <input id="center-line" type="number" min="0" step="1" />
+          </label>
+        </div>
+      </section>
 
-    <section class="panel-section">
-      <h2>Presets</h2>
-      ...
-    </section>
+      <section class="panel-section">
+        <h2>Presets</h2>
+        <div class="field-stack">
+          <label>
+            Preset layout
+            <select id="preset-select">
+              <option value="grid-5x5">1) 5×5 grid, 20×20 cm</option>
+              <option value="single-wide-200">2) One wide image, 200 cm, ratio 2:1</option>
+              <option value="symmetric-3">3) Symmetric 3-piece layout</option>
+              <option value="quad-2x2">4) Four square images, 2×2</option>
+              <option value="wide-plus-row">5) Wide image + row of 7 small squares</option>
+            </select>
+          </label>
 
-    <section class="panel-section">
-      <h2>Assign image</h2>
-      ...
-    </section>
+          <button id="apply-preset" class="button button-secondary" type="button">
+            Apply preset
+          </button>
+        </div>
+      </section>
 
-    <section class="panel-section">
-      <h2>Add artwork</h2>
-      ...
-    </section>
+      <section class="panel-section">
+        <h2>Assign image</h2>
+        <div class="field-stack">
+          <label>
+            Image for selected artwork
+            <select id="assign-image-select"></select>
+          </label>
+          <button id="assign-image-button" class="button button-secondary" type="button">
+            Replace selected
+          </button>
+        </div>
+      </section>
 
-    <section class="panel-section">
-      <h2>Artworks on wall</h2>
-      ...
-    </section>
-  </aside>
+      <section class="panel-section">
+        <h2>Add artwork</h2>
+        <div class="field-stack">
+          <label>
+            Image file
+            <select id="image-select"></select>
+          </label>
 
-  <section class="planner-stage">
-    <div class="stage-inner">
-      <div id="wall-wrapper" class="wall-wrapper">
-        <div id="wall" class="wall" aria-label="Exhibition wall"></div>
+          <div class="field-grid">
+            <label>
+              Width (cm)
+              <input id="new-width" type="number" min="5" step="1" value="60" />
+            </label>
+            <label>
+              Height (cm)
+              <input id="new-height" type="number" min="5" step="1" value="40" />
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              X (cm)
+              <input id="new-x" type="number" min="0" step="1" value="20" />
+            </label>
+            <label>
+              Y (cm)
+              <input id="new-y" type="number" min="0" step="1" value="60" />
+            </label>
+          </div>
+
+          <button id="add-artwork" class="button" type="button">Add to wall</button>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2>Artworks on wall</h2>
+        <div id="artwork-list" class="artwork-list"></div>
+      </section>
+    </aside>
+
+    <section class="planner-stage">
+      <div class="stage-inner">
+        <div id="wall-wrapper" class="wall-wrapper">
+          <div id="wall" class="wall" aria-label="Exhibition wall"></div>
+        </div>
       </div>
-    </div>
-  </section>
-
-  <aside class="panel panel-right">
-    <section class="panel-section">
-      <h2>Selected artwork</h2>
-      ...
     </section>
 
-    <section class="panel-section">
-      <h2>Export</h2>
-      ...
-    </section>
+    <aside class="panel panel-right">
+      <section class="panel-section">
+        <h2>Selected artwork</h2>
+        <div id="selected-empty" class="muted-box">No artwork selected.</div>
 
-    <section class="panel-section">
-      <h2>Snapshots</h2>
-      ...
-    </section>
-  </aside>
-</main>
-  
+        <div id="selected-editor" class="field-stack hidden">
+          <label>
+            Title
+            <input id="edit-title" type="text" />
+          </label>
+
+          <div class="field-grid">
+            <label>
+              Width (cm)
+              <input id="edit-width" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Height (cm)
+              <input id="edit-height" type="number" min="1" step="1" />
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              X (cm)
+              <input id="edit-x" type="number" min="0" step="1" />
+            </label>
+            <label>
+              Y (cm)
+              <input id="edit-y" type="number" min="0" step="1" />
+            </label>
+          </div>
+
+          <div class="field-stack compact">
+            <button id="duplicate-artwork" class="button button-secondary" type="button">Duplicate</button>
+            <button id="delete-artwork" class="button button-danger" type="button">Delete</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2>Export</h2>
+        <div class="field-stack">
+          <button id="copy-json" class="button" type="button">Copy layout JSON</button>
+          <textarea id="json-output" rows="14" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2>Snapshots</h2>
+
+        <div class="field-stack">
+          <label>
+            Snapshot name
+            <input id="snapshot-name" type="text" placeholder="e.g. Symmetric version A" />
+          </label>
+
+          <button id="save-snapshot" class="button button-secondary" type="button">
+            Save snapshot
+          </button>
+        </div>
+
+        <div id="snapshot-list" class="artwork-list"></div>
+      </section>
+    </aside>
+  </main>
+
   <script src="./src/js/planner.js"></script>
 </body>
 </html>
