@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exhibition Planner Print View</title>
+  <link rel="stylesheet" href="./src/css/print.css" />
+</head>
+<body>
+  <main class="print-page">
+    <header class="print-header">
+      <div>
+        <h1>Exhibition Planner</h1>
+        <p>Print layout preview</p>
+      </div>
+      <div class="print-actions no-print">
+        <button id="print-button" type="button">Print</button>
+        <button id="close-button" type="button">Close</button>
+      </div>
+    </header>
+
+    <section class="print-stage">
+      <div class="print-stage-inner">
+        <div id="print-wall" class="print-wall" aria-label="Print wall layout"></div>
+      </div>
+    </section>
+
+    <footer class="print-footer">
+      <div id="wall-meta" class="wall-meta"></div>
+    </footer>
+  </main>
+
+  <script src="./src/js/print.js"></script>
+</body>
+</html>
