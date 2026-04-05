@@ -29,9 +29,19 @@ const duplicateButton = document.getElementById("duplicate-artwork");
 const deleteButton = document.getElementById("delete-artwork");
 const copyJsonButton = document.getElementById("copy-json");
 
+const appShell = document.querySelector(".app-shell");
+const leftPanel = document.querySelector(".panel-left");
+const rightPanel = document.querySelector(".panel-right");
+const toggleLeftPanelButton = document.getElementById("toggle-left-panel");
+const toggleRightPanelButton = document.getElementById("toggle-right-panel");
+
 let layoutData = null;
 let selectedArtworkId = null;
 let wallScale = 1;
+let isLeftPanelHidden = false;
+let isRightPanelHidden = false;
+
+
 
 async function init() {
   try {
@@ -41,6 +51,7 @@ async function init() {
     ensureDefaults();
     populateWallInputs();
     populateImageSelect();
+    ensurePanelState();
     renderAll();
     bindControls();
   } catch (error) {
@@ -78,6 +89,36 @@ function bindControls() {
     layoutData.wall.widthCm = clampNumber(wallWidthInput.value, 50, 5000);
     renderAll();
   });
+
+  function ensurePanelState() {
+  const savedLeft = localStorage.getItem("exhibition-left-panel-hidden");
+  const savedRight = localStorage.getItem("exhibition-right-panel-hidden");
+
+  isLeftPanelHidden = savedLeft === "true";
+  isRightPanelHidden = savedRight === "true";
+}
+
+function savePanelState() {
+  localStorage.setItem("exhibition-left-panel-hidden", String(isLeftPanelHidden));
+  localStorage.setItem("exhibition-right-panel-hidden", String(isRightPanelHidden));
+}
+
+function applyPanelVisibility() {
+  leftPanel.classList.toggle("is-collapsed", isLeftPanelHidden);
+  rightPanel.classList.toggle("is-collapsed", isRightPanelHidden);
+  appShell.classList.toggle("left-panel-hidden", isLeftPanelHidden);
+  appShell.classList.toggle("right-panel-hidden", isRightPanelHidden);
+
+  toggleLeftPanelButton.textContent = isLeftPanelHidden
+    ? "Show left panel"
+    : "Hide left panel";
+
+  toggleRightPanelButton.textContent = isRightPanelHidden
+    ? "Show right panel"
+    : "Hide right panel";
+
+  renderWall();
+}
 
   wallHeightInput.addEventListener("input", () => {
     layoutData.wall.heightCm = clampNumber(wallHeightInput.value, 50, 5000);
@@ -131,6 +172,20 @@ function bindControls() {
   copyJsonButton.addEventListener("click", copyJsonToClipboard);
 }
 
+  toggleLeftPanelButton.addEventListener("click", () => {
+    isLeftPanelHidden = !isLeftPanelHidden;
+    savePanelState();
+    applyPanelVisibility();
+  });
+
+  toggleRightPanelButton.addEventListener("click", () => {
+    isRightPanelHidden = !isRightPanelHidden;
+    savePanelState();
+    applyPanelVisibility();
+  });
+
+
+
 function populateWallInputs() {
   wallWidthInput.value = layoutData.wall.widthCm;
   wallHeightInput.value = layoutData.wall.heightCm;
@@ -149,6 +204,7 @@ function populateImageSelect() {
 }
 
 function renderAll() {
+  applyPanelVisibility();
   renderWall();
   renderArtworkList();
   renderSelectedEditor();
