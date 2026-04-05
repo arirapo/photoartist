@@ -13,14 +13,17 @@
       <p>Minimal mockup tool for simple wall layouts</p>
     </div>
 
-    <div class="topbar-actions">
-      <button id="toggle-left-panel" class="button button-secondary" type="button">
-        Hide left panel
-      </button>
-      <button id="toggle-right-panel" class="button button-secondary" type="button">
-        Hide right panel
-      </button>
-    </div>
+<div class="topbar-actions">
+  <button id="toggle-left-panel" class="button button-secondary" type="button">
+    Hide left panel
+  </button>
+  <button id="toggle-right-panel" class="button button-secondary" type="button">
+    Hide right panel
+  </button>
+  <button id="toggle-focus-mode" class="button button-secondary" type="button">
+    Focus mode
+  </button>
+</div>
   </header>
 
   <main class="app-shell">
@@ -87,6 +90,26 @@
         </div>
       </div>
     </section>
+
+    <section class="panel-section">
+  <h2>Presets</h2>
+  <div class="field-stack">
+    <label>
+      Preset layout
+      <select id="preset-select">
+        <option value="grid-5x5">1) 5×5 grid, 20×20 cm</option>
+        <option value="single-wide-200">2) One wide image, 200 cm, ratio 2:1</option>
+        <option value="symmetric-3">3) Symmetric 3-piece layout</option>
+        <option value="quad-2x2">4) Four square images, 2×2</option>
+        <option value="wide-plus-row">5) Wide image + row of 7 small squares</option>
+      </select>
+    </label>
+
+    <button id="apply-preset" class="button button-secondary" type="button">
+      Apply preset
+    </button>
+  </div>
+</section>
 
     <aside class="panel panel-right">
       <section class="panel-section">
