@@ -365,3 +365,38 @@ textarea {
 .app-shell.left-panel-hidden.right-panel-hidden {
   grid-template-columns: minmax(0, 1fr);
 }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.panel {
+  transition: opacity 0.2s ease, transform 0.2s ease, width 0.2s ease;
+}
+
+.panel.is-collapsed {
+  display: none;
+}
+
+.app-shell.left-panel-hidden {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.app-shell.right-panel-hidden {
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
+.app-shell.left-panel-hidden.right-panel-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
