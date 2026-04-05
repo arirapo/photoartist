@@ -45,6 +45,10 @@ let isRightPanelHidden = false;
 async function init() {
   try {
     const response = await fetch(DATA_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} when loading ${DATA_URL}`);
+    }
+
     layoutData = await response.json();
 
     ensureDefaults();
@@ -55,11 +59,17 @@ async function init() {
     applyPanelVisibility();
     renderAll();
   } catch (error) {
-    console.error(error);
+    console.error("Planner init failed:", error);
+
     if (jsonOutput) {
-      jsonOutput.value = "Could not load layout.json";
+      jsonOutput.value = `Init error: ${error.message}`;
     }
   }
+}
+
+function on(element, eventName, handler) {
+  if (!element) return;
+  element.addEventListener(eventName, handler);
 }
 
 function ensureDefaults() {
@@ -87,16 +97,26 @@ function ensureDefaults() {
 }
 
 function ensurePanelState() {
-  const savedLeft = localStorage.getItem("exhibition-left-panel-hidden");
-  const savedRight = localStorage.getItem("exhibition-right-panel-hidden");
+  try {
+    const savedLeft = localStorage.getItem("exhibition-left-panel-hidden");
+    const savedRight = localStorage.getItem("exhibition-right-panel-hidden");
 
-  isLeftPanelHidden = savedLeft === "true";
-  isRightPanelHidden = savedRight === "true";
+    isLeftPanelHidden = savedLeft === "true";
+    isRightPanelHidden = savedRight === "true";
+  } catch (error) {
+    console.warn("localStorage unavailable:", error);
+    isLeftPanelHidden = false;
+    isRightPanelHidden = false;
+  }
 }
 
 function savePanelState() {
-  localStorage.setItem("exhibition-left-panel-hidden", String(isLeftPanelHidden));
-  localStorage.setItem("exhibition-right-panel-hidden", String(isRightPanelHidden));
+  try {
+    localStorage.setItem("exhibition-left-panel-hidden", String(isLeftPanelHidden));
+    localStorage.setItem("exhibition-right-panel-hidden", String(isRightPanelHidden));
+  } catch (error) {
+    console.warn("Could not save panel state:", error);
+  }
 }
 
 function applyPanelVisibility() {
@@ -129,88 +149,86 @@ function applyPanelVisibility() {
 }
 
 function bindControls() {
-  wallWidthInput.addEventListener("input", () => {
+  on(wallWidthInput, "input", () => {
     layoutData.wall.widthCm = clampNumber(wallWidthInput.value, 50, 5000);
     renderAll();
   });
 
-  wallHeightInput.addEventListener("input", () => {
+  on(wallHeightInput, "input", () => {
     layoutData.wall.heightCm = clampNumber(wallHeightInput.value, 50, 5000);
     renderAll();
   });
 
-  centerLineInput.addEventListener("input", () => {
+  on(centerLineInput, "input", () => {
     layoutData.wall.centerLineCm = clampNumber(centerLineInput.value, 0, 5000);
     renderAll();
   });
 
-  addArtworkButton.addEventListener("click", addArtworkFromForm);
+  on(addArtworkButton, "click", addArtworkFromForm);
 
-  editTitleInput.addEventListener("input", () => {
+  on(editTitleInput, "input", () => {
     const artwork = getSelectedArtwork();
     if (!artwork) return;
     artwork.title = editTitleInput.value;
     renderAll();
   });
 
-  editWidthInput.addEventListener("input", () => {
+  on(editWidthInput, "input", () => {
     const artwork = getSelectedArtwork();
     if (!artwork) return;
     artwork.widthCm = clampNumber(editWidthInput.value, 1, 5000);
     renderAll();
   });
 
-  editHeightInput.addEventListener("input", () => {
+  on(editHeightInput, "input", () => {
     const artwork = getSelectedArtwork();
     if (!artwork) return;
     artwork.heightCm = clampNumber(editHeightInput.value, 1, 5000);
     renderAll();
   });
 
-  editXInput.addEventListener("input", () => {
+  on(editXInput, "input", () => {
     const artwork = getSelectedArtwork();
     if (!artwork) return;
     artwork.xCm = clampNumber(editXInput.value, 0, 5000);
     renderAll();
   });
 
-  editYInput.addEventListener("input", () => {
+  on(editYInput, "input", () => {
     const artwork = getSelectedArtwork();
     if (!artwork) return;
     artwork.yCm = clampNumber(editYInput.value, 0, 5000);
     renderAll();
   });
 
-  duplicateButton.addEventListener("click", duplicateSelectedArtwork);
-  deleteButton.addEventListener("click", deleteSelectedArtwork);
-  copyJsonButton.addEventListener("click", copyJsonToClipboard);
+  on(duplicateButton, "click", duplicateSelectedArtwork);
+  on(deleteButton, "click", deleteSelectedArtwork);
+  on(copyJsonButton, "click", copyJsonToClipboard);
 
-  if (toggleLeftPanelButton) {
-    toggleLeftPanelButton.addEventListener("click", () => {
-      isLeftPanelHidden = !isLeftPanelHidden;
-      savePanelState();
-      applyPanelVisibility();
-      renderWall();
-    });
-  }
+  on(toggleLeftPanelButton, "click", () => {
+    isLeftPanelHidden = !isLeftPanelHidden;
+    savePanelState();
+    applyPanelVisibility();
+    renderWall();
+  });
 
-  if (toggleRightPanelButton) {
-    toggleRightPanelButton.addEventListener("click", () => {
-      isRightPanelHidden = !isRightPanelHidden;
-      savePanelState();
-      applyPanelVisibility();
-      renderWall();
-    });
-  }
+  on(toggleRightPanelButton, "click", () => {
+    isRightPanelHidden = !isRightPanelHidden;
+    savePanelState();
+    applyPanelVisibility();
+    renderWall();
+  });
 }
 
 function populateWallInputs() {
-  wallWidthInput.value = layoutData.wall.widthCm;
-  wallHeightInput.value = layoutData.wall.heightCm;
-  centerLineInput.value = layoutData.wall.centerLineCm;
+  if (wallWidthInput) wallWidthInput.value = layoutData.wall.widthCm;
+  if (wallHeightInput) wallHeightInput.value = layoutData.wall.heightCm;
+  if (centerLineInput) centerLineInput.value = layoutData.wall.centerLineCm;
 }
 
 function populateImageSelect() {
+  if (!imageSelect) return;
+
   imageSelect.innerHTML = "";
 
   layoutData.availableImages.forEach((file) => {
@@ -229,6 +247,8 @@ function renderAll() {
 }
 
 function renderWall() {
+  if (!wallElement) return;
+
   wallElement.innerHTML = "";
 
   const wallWidthCm = Number(layoutData.wall.widthCm);
@@ -294,6 +314,8 @@ function clearSelectionOnWallClick(event) {
 }
 
 function renderCenterLine() {
+  if (!wallElement) return;
+
   const line = document.createElement("div");
   line.className = "center-line";
   line.style.top = `${Number(layoutData.wall.centerLineCm) * wallScale}px`;
@@ -308,6 +330,8 @@ function renderCenterLine() {
 }
 
 function renderArtworkList() {
+  if (!artworkListElement) return;
+
   artworkListElement.innerHTML = "";
 
   if (!layoutData.artworks.length) {
@@ -355,6 +379,8 @@ function renderArtworkList() {
 }
 
 function renderSelectedEditor() {
+  if (!selectedEmpty || !selectedEditor) return;
+
   const artwork = getSelectedArtwork();
 
   if (!artwork) {
@@ -366,26 +392,29 @@ function renderSelectedEditor() {
   selectedEmpty.classList.add("hidden");
   selectedEditor.classList.remove("hidden");
 
-  editTitleInput.value = artwork.title || "";
-  editWidthInput.value = artwork.widthCm;
-  editHeightInput.value = artwork.heightCm;
-  editXInput.value = artwork.xCm;
-  editYInput.value = artwork.yCm;
+  if (editTitleInput) editTitleInput.value = artwork.title || "";
+  if (editWidthInput) editWidthInput.value = artwork.widthCm;
+  if (editHeightInput) editHeightInput.value = artwork.heightCm;
+  if (editXInput) editXInput.value = artwork.xCm;
+  if (editYInput) editYInput.value = artwork.yCm;
 }
 
 function renderJsonOutput() {
+  if (!jsonOutput) return;
   jsonOutput.value = JSON.stringify(layoutData, null, 2);
 }
 
 function addArtworkFromForm() {
+  if (!imageSelect) return;
+
   const file = imageSelect.value;
   if (!file) return;
 
   const title = file;
-  const widthCm = clampNumber(newWidthInput.value, 1, 5000);
-  const heightCm = clampNumber(newHeightInput.value, 1, 5000);
-  const xCm = clampNumber(newXInput.value, 0, 5000);
-  const yCm = clampNumber(newYInput.value, 0, 5000);
+  const widthCm = clampNumber(newWidthInput?.value, 1, 5000);
+  const heightCm = clampNumber(newHeightInput?.value, 1, 5000);
+  const xCm = clampNumber(newXInput?.value, 0, 5000);
+  const yCm = clampNumber(newYInput?.value, 0, 5000);
 
   const artwork = {
     id: createId(),
@@ -445,6 +474,8 @@ function createId() {
 }
 
 function copyJsonToClipboard() {
+  if (!copyJsonButton) return;
+
   const text = JSON.stringify(layoutData, null, 2);
 
   navigator.clipboard.writeText(text)
