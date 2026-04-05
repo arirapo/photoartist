@@ -169,9 +169,8 @@ function bindControls() {
   on(wallWidthInput, "input", () => {
     layoutData.wall.widthCm = clampNumber(wallWidthInput.value, 50, 5000);
     renderAll();
-  on(openPrintViewButton, "click", openPrintView);
   });
-
+  on(openPrintViewButton, "click", openPrintView);
   on(wallHeightInput, "input", () => {
     layoutData.wall.heightCm = clampNumber(wallHeightInput.value, 50, 5000);
     renderAll();
