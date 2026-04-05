@@ -39,6 +39,8 @@ const toggleFocusModeButton = document.getElementById("toggle-focus-mode");
 const presetSelect = document.getElementById("preset-select");
 const applyPresetButton = document.getElementById("apply-preset");
 
+const openPrintViewButton = document.getElementById("open-print-view");
+
 let layoutData = null;
 let selectedArtworkId = null;
 let wallScale = 1;
@@ -167,6 +169,7 @@ function bindControls() {
   on(wallWidthInput, "input", () => {
     layoutData.wall.widthCm = clampNumber(wallWidthInput.value, 50, 5000);
     renderAll();
+  on(openPrintViewButton, "click", openPrintView);
   });
 
   on(wallHeightInput, "input", () => {
@@ -254,6 +257,8 @@ function bindControls() {
 
   on(applyPresetButton, "click", applySelectedPreset);
 }
+
+
 
 function populateWallInputs() {
   if (wallWidthInput) wallWidthInput.value = layoutData.wall.widthCm;
@@ -766,6 +771,22 @@ function copyJsonToClipboard() {
     });
 }
 
+function openPrintView() {
+  try {
+    localStorage.setItem(
+      "exhibition-print-layout",
+      JSON.stringify({
+        wall: layoutData.wall,
+        artworks: layoutData.artworks
+      })
+    );
+    window.open("./print.html", "_blank");
+  } catch (error) {
+    console.error("Could not open print view:", error);
+    alert("Could not open print view.");
+  }
+}
+
 function startDrag(event) {
   const artworkId = event.currentTarget.dataset.id;
   const artwork = layoutData.artworks.find((item) => item.id === artworkId);
@@ -802,5 +823,7 @@ function startDrag(event) {
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", onMouseUp);
 }
+
+
 
 init();
