@@ -38,10 +38,9 @@ const toggleRightPanelButton = document.getElementById("toggle-right-panel");
 let layoutData = null;
 let selectedArtworkId = null;
 let wallScale = 1;
+
 let isLeftPanelHidden = false;
 let isRightPanelHidden = false;
-
-
 
 async function init() {
   try {
@@ -49,14 +48,17 @@ async function init() {
     layoutData = await response.json();
 
     ensureDefaults();
+    ensurePanelState();
     populateWallInputs();
     populateImageSelect();
-    ensurePanelState();
-    renderAll();
     bindControls();
+    applyPanelVisibility();
+    renderAll();
   } catch (error) {
     console.error(error);
-    jsonOutput.value = "Could not load layout.json";
+    if (jsonOutput) {
+      jsonOutput.value = "Could not load layout.json";
+    }
   }
 }
 
@@ -84,13 +86,7 @@ function ensureDefaults() {
   }));
 }
 
-function bindControls() {
-  wallWidthInput.addEventListener("input", () => {
-    layoutData.wall.widthCm = clampNumber(wallWidthInput.value, 50, 5000);
-    renderAll();
-  });
-
-  function ensurePanelState() {
+function ensurePanelState() {
   const savedLeft = localStorage.getItem("exhibition-left-panel-hidden");
   const savedRight = localStorage.getItem("exhibition-right-panel-hidden");
 
@@ -104,21 +100,39 @@ function savePanelState() {
 }
 
 function applyPanelVisibility() {
-  leftPanel.classList.toggle("is-collapsed", isLeftPanelHidden);
-  rightPanel.classList.toggle("is-collapsed", isRightPanelHidden);
-  appShell.classList.toggle("left-panel-hidden", isLeftPanelHidden);
-  appShell.classList.toggle("right-panel-hidden", isRightPanelHidden);
+  if (leftPanel) {
+    leftPanel.classList.toggle("is-collapsed", isLeftPanelHidden);
+  }
 
-  toggleLeftPanelButton.textContent = isLeftPanelHidden
-    ? "Show left panel"
-    : "Hide left panel";
+  if (rightPanel) {
+    rightPanel.classList.toggle("is-collapsed", isRightPanelHidden);
+  }
 
-  toggleRightPanelButton.textContent = isRightPanelHidden
-    ? "Show right panel"
-    : "Hide right panel";
+  if (appShell) {
+    appShell.classList.toggle("left-panel-hidden", isLeftPanelHidden);
+    appShell.classList.toggle("right-panel-hidden", isRightPanelHidden);
+  }
 
-  renderWall();
+  if (toggleLeftPanelButton) {
+    toggleLeftPanelButton.textContent = isLeftPanelHidden
+      ? "Show left panel"
+      : "Hide left panel";
+    toggleLeftPanelButton.setAttribute("aria-pressed", String(isLeftPanelHidden));
+  }
+
+  if (toggleRightPanelButton) {
+    toggleRightPanelButton.textContent = isRightPanelHidden
+      ? "Show right panel"
+      : "Hide right panel";
+    toggleRightPanelButton.setAttribute("aria-pressed", String(isRightPanelHidden));
+  }
 }
+
+function bindControls() {
+  wallWidthInput.addEventListener("input", () => {
+    layoutData.wall.widthCm = clampNumber(wallWidthInput.value, 50, 5000);
+    renderAll();
+  });
 
   wallHeightInput.addEventListener("input", () => {
     layoutData.wall.heightCm = clampNumber(wallHeightInput.value, 50, 5000);
@@ -170,21 +184,25 @@ function applyPanelVisibility() {
   duplicateButton.addEventListener("click", duplicateSelectedArtwork);
   deleteButton.addEventListener("click", deleteSelectedArtwork);
   copyJsonButton.addEventListener("click", copyJsonToClipboard);
+
+  if (toggleLeftPanelButton) {
+    toggleLeftPanelButton.addEventListener("click", () => {
+      isLeftPanelHidden = !isLeftPanelHidden;
+      savePanelState();
+      applyPanelVisibility();
+      renderWall();
+    });
+  }
+
+  if (toggleRightPanelButton) {
+    toggleRightPanelButton.addEventListener("click", () => {
+      isRightPanelHidden = !isRightPanelHidden;
+      savePanelState();
+      applyPanelVisibility();
+      renderWall();
+    });
+  }
 }
-
-  toggleLeftPanelButton.addEventListener("click", () => {
-    isLeftPanelHidden = !isLeftPanelHidden;
-    savePanelState();
-    applyPanelVisibility();
-  });
-
-  toggleRightPanelButton.addEventListener("click", () => {
-    isRightPanelHidden = !isRightPanelHidden;
-    savePanelState();
-    applyPanelVisibility();
-  });
-
-
 
 function populateWallInputs() {
   wallWidthInput.value = layoutData.wall.widthCm;
@@ -204,7 +222,6 @@ function populateImageSelect() {
 }
 
 function renderAll() {
-  applyPanelVisibility();
   renderWall();
   renderArtworkList();
   renderSelectedEditor();
@@ -233,6 +250,7 @@ function renderWall() {
   layoutData.artworks.forEach((artwork) => {
     const artworkEl = document.createElement("div");
     artworkEl.className = "artwork";
+
     if (artwork.id === selectedArtworkId) {
       artworkEl.classList.add("is-selected");
     }
@@ -264,6 +282,7 @@ function renderWall() {
     wallElement.appendChild(artworkEl);
   });
 
+  wallElement.removeEventListener("click", clearSelectionOnWallClick);
   wallElement.addEventListener("click", clearSelectionOnWallClick);
 }
 
@@ -299,6 +318,7 @@ function renderArtworkList() {
   layoutData.artworks.forEach((artwork) => {
     const item = document.createElement("div");
     item.className = "artwork-list-item";
+
     if (artwork.id === selectedArtworkId) {
       item.classList.add("is-selected");
     }
@@ -426,6 +446,7 @@ function createId() {
 
 function copyJsonToClipboard() {
   const text = JSON.stringify(layoutData, null, 2);
+
   navigator.clipboard.writeText(text)
     .then(() => {
       copyJsonButton.textContent = "Copied";
@@ -448,7 +469,6 @@ function startDrag(event) {
 
   selectedArtworkId = artwork.id;
 
-  const wallRect = wallElement.getBoundingClientRect();
   const startMouseX = event.clientX;
   const startMouseY = event.clientY;
   const startX = artwork.xCm;
