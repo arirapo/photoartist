@@ -14,22 +14,23 @@ let wallScale = 1;
 init();
 
 function init() {
+  bindControls();
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
 
     if (!raw) {
-      renderError("No layout data found.");
+      renderError("No layout data found. Return to planner and open Print again.");
       return;
     }
 
     printData = JSON.parse(raw);
 
-    if (!printData?.wall || !Array.isArray(printData?.artworks)) {
+    if (!printData || !printData.wall || !Array.isArray(printData.artworks)) {
       renderError("Layout data is incomplete.");
       return;
     }
 
-    bindControls();
     renderPrintView();
   } catch (error) {
     console.error("Print view failed:", error);
@@ -39,24 +40,36 @@ function init() {
 
 function bindControls() {
   if (printButton) {
-printButton.addEventListener("click", () => {
-  setTimeout(() => {
-    window.print();
-  }, 100);
-});
-
-      
+    printButton.addEventListener("click", () => {
+      try {
+        setTimeout(() => {
+          window.print();
+        }, 100);
+      } catch (error) {
+        console.error("Print failed:", error);
+        alert("Use your browser menu and choose Print.");
+      }
     });
   }
 
   if (closeButton) {
     closeButton.addEventListener("click", () => {
-      window.close();
+      try {
+        window.close();
+      } catch (error) {
+        console.warn("window.close() failed:", error);
+      }
+
+      if (window.history.length > 1) {
+        window.history.back();
+      }
     });
   }
 }
 
 function renderPrintView() {
+  if (!printWallElement) return;
+
   printWallElement.innerHTML = "";
 
   const wallWidthCm = Number(printData.wall.widthCm) || 500;
@@ -104,10 +117,14 @@ function renderPrintView() {
     printWallElement.appendChild(artworkEl);
   });
 
-  wallMetaElement.textContent = `Wall: ${wallWidthCm} × ${wallHeightCm} cm`;
+  if (wallMetaElement) {
+    wallMetaElement.textContent = `Wall: ${wallWidthCm} × ${wallHeightCm} cm`;
+  }
 }
 
 function renderCenterLine(centerLineCm) {
+  if (!printWallElement) return;
+
   const line = document.createElement("div");
   line.className = "print-center-line";
   line.style.top = `${centerLineCm * wallScale}px`;
@@ -155,6 +172,15 @@ function escapeHtml(text) {
 }
 
 function renderError(message) {
-  if (!printWallElement) return;
-  printWallElement.innerHTML = `<div style="padding:2rem;font:16px sans-serif;">${message}</div>`;
+  if (printWallElement) {
+    printWallElement.innerHTML = `
+      <div style="padding:2rem;font:16px Arial, sans-serif;color:#222;">
+        ${message}
+      </div>
+    `;
+  }
+
+  if (wallMetaElement) {
+    wallMetaElement.textContent = "Print view could not be rendered.";
+  }
 }
