@@ -44,6 +44,10 @@ const openPrintViewButton = document.getElementById("open-print-view");
 const assignImageSelect = document.getElementById("assign-image-select");
 const assignImageButton = document.getElementById("assign-image-button");
 
+const snapshotNameInput = document.getElementById("snapshot-name");
+const saveSnapshotButton = document.getElementById("save-snapshot");
+const snapshotListElement = document.getElementById("snapshot-list");
+
 let layoutData = null;
 let selectedArtworkId = null;
 let wallScale = 1;
@@ -51,6 +55,9 @@ let wallScale = 1;
 let isLeftPanelHidden = false;
 let isRightPanelHidden = false;
 let isFocusMode = false;
+
+const SNAPSHOT_STORAGE_KEY = "exhibition-snapshots";
+let snapshots = [];
 
 async function init() {
   try {
@@ -63,6 +70,7 @@ async function init() {
 
     ensureDefaults();
     ensurePanelState();
+    loadSnapshots();
     populateWallInputs();
     populateImageSelect();
     bindControls();
@@ -186,6 +194,7 @@ function bindControls() {
 
   on(addArtworkButton, "click", addArtworkFromForm);
   on(assignImageButton, "click", assignImageToSelectedArtwork);
+  on(saveSnapshotButton, "click", saveSnapshot);
 
   on(editTitleInput, "input", () => {
     const artwork = getSelectedArtwork();
@@ -299,6 +308,7 @@ function renderAll() {
   renderWall();
   renderArtworkList();
   renderSelectedEditor();
+  renderSnapshotList();
   renderJsonOutput();
 }
 
@@ -522,6 +532,156 @@ function addArtworkFromForm() {
   layoutData.artworks.push(artwork);
   selectedArtworkId = artwork.id;
   renderAll();
+}
+
+function loadSnapshots() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_STORAGE_KEY);
+    snapshots = raw ? JSON.parse(raw) : [];
+
+    if (!Array.isArray(snapshots)) {
+      snapshots = [];
+    }
+  } catch (error) {
+    console.warn("Could not load snapshots:", error);
+    snapshots = [];
+  }
+}
+
+function persistSnapshots() {
+  try {
+    localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshots));
+  } catch (error) {
+    console.warn("Could not save snapshots:", error);
+  }
+}
+
+function saveSnapshot() {
+  const name = (snapshotNameInput?.value || "").trim() || defaultSnapshotName();
+
+  const snapshot = {
+    id: createId(),
+    name,
+    createdAt: new Date().toISOString(),
+    layout: {
+      wall: structuredCloneSafe(layoutData.wall),
+      artworks: structuredCloneSafe(layoutData.artworks)
+    }
+  };
+
+  snapshots.unshift(snapshot);
+  persistSnapshots();
+  renderSnapshotList();
+
+  if (snapshotNameInput) {
+    snapshotNameInput.value = "";
+  }
+
+  if (saveSnapshotButton) {
+    const originalText = saveSnapshotButton.textContent;
+    saveSnapshotButton.textContent = "Saved";
+    setTimeout(() => {
+      saveSnapshotButton.textContent = originalText;
+    }, 1000);
+  }
+}
+
+function defaultSnapshotName() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  return `Snapshot ${yyyy}-${mm}-${dd} ${hh}:${min}`;
+}
+
+function structuredCloneSafe(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function renderSnapshotList() {
+  if (!snapshotListElement) return;
+
+  snapshotListElement.innerHTML = "";
+
+  if (!snapshots.length) {
+    snapshotListElement.innerHTML = `<div class="muted-box">No snapshots saved yet.</div>`;
+    return;
+  }
+
+  snapshots.forEach((snapshot) => {
+    const item = document.createElement("div");
+    item.className = "snapshot-item";
+
+    const textWrap = document.createElement("div");
+    textWrap.className = "snapshot-text";
+
+    const title = document.createElement("div");
+    title.className = "snapshot-title";
+    title.textContent = snapshot.name;
+
+    const meta = document.createElement("div");
+    meta.className = "snapshot-meta";
+    meta.textContent = snapshotMetaText(snapshot);
+
+    textWrap.appendChild(title);
+    textWrap.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "snapshot-actions";
+
+    const loadButton = document.createElement("button");
+    loadButton.className = "button button-secondary button-small";
+    loadButton.type = "button";
+    loadButton.textContent = "Load";
+    loadButton.addEventListener("click", () => loadSnapshot(snapshot.id));
+
+    const deleteButtonEl = document.createElement("button");
+    deleteButtonEl.className = "button button-danger button-small";
+    deleteButtonEl.type = "button";
+    deleteButtonEl.textContent = "Delete";
+    deleteButtonEl.addEventListener("click", () => deleteSnapshot(snapshot.id));
+
+    actions.appendChild(loadButton);
+    actions.appendChild(deleteButtonEl);
+
+    item.appendChild(textWrap);
+    item.appendChild(actions);
+
+    snapshotListElement.appendChild(item);
+  });
+}
+
+function snapshotMetaText(snapshot) {
+  const artworkCount = Array.isArray(snapshot.layout?.artworks)
+    ? snapshot.layout.artworks.length
+    : 0;
+
+  const wall = snapshot.layout?.wall || {};
+  const width = Number(wall.widthCm) || 0;
+  const height = Number(wall.heightCm) || 0;
+
+  return `${artworkCount} artworks · wall ${width} × ${height} cm`;
+}
+
+function loadSnapshot(snapshotId) {
+  const snapshot = snapshots.find((item) => item.id === snapshotId);
+  if (!snapshot) return;
+
+  layoutData.wall = structuredCloneSafe(snapshot.layout.wall);
+  layoutData.artworks = structuredCloneSafe(snapshot.layout.artworks);
+
+  selectedArtworkId = null;
+
+  populateWallInputs();
+  renderAll();
+}
+
+function deleteSnapshot(snapshotId) {
+  snapshots = snapshots.filter((item) => item.id !== snapshotId);
+  persistSnapshots();
+  renderSnapshotList();
 }
 
 function assignImageToSelectedArtwork() {
