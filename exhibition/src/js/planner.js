@@ -779,7 +779,12 @@ function openPrintView() {
         artworks: layoutData.artworks
       })
     );
-    window.open("./print.html", "_blank");
+
+    const printWindow = window.open("./print.html", "_blank");
+
+    if (!printWindow) {
+      alert("Could not open print view.");
+    }
   } catch (error) {
     console.error("Could not open print view:", error);
     alert("Could not open print view.");
