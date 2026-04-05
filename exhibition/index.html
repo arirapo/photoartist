@@ -128,6 +128,8 @@
   </div>
 </section>
 
+
+
     <aside class="panel panel-right">
       <section class="panel-section">
         <h2>Selected artwork</h2>
@@ -175,6 +177,24 @@
           <textarea id="json-output" rows="14" spellcheck="false"></textarea>
         </div>
       </section>
+    <section class="panel-section">
+  <h2>Snapshots</h2>
+
+  <div class="field-stack">
+    <label>
+      Snapshot name
+      <input id="snapshot-name" type="text" placeholder="e.g. Symmetric version A" />
+    </label>
+
+    <button id="save-snapshot" class="button button-secondary" type="button">
+      Save snapshot
+    </button>
+  </div>
+
+  <div id="snapshot-list" class="artwork-list"></div>
+</section>
+
+      
     </aside>
   </main>
 
