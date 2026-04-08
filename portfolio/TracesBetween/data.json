@@ -1,0 +1,39 @@
+{
+  "type": "Project Template",
+  "title": "Project Template",
+  "summary": "A starter structure for a future portfolio project page.",
+  "year": "Ongoing",
+  "medium": "Photography / Web / Conceptual",
+  "status": "In preparation",
+  "description": [
+    "This page is a modular template for future portfolio entries.",
+    "Duplicate this folder, rename it, and begin shaping a project page with its own tone, imagery and internal structure.",
+    "The current version uses JSON as a lightweight content source, but the page can also be rewritten later as fully hand-built HTML if preferred."
+  ],
+  "images": [
+    {
+      "title": "Placeholder one",
+      "caption": "A reserved space for an image, still, spread, or installation view.",
+      "placeholder": "4:3 placeholder"
+    },
+    {
+      "title": "Placeholder two",
+      "caption": "This could later become a selected work, detail, or process fragment.",
+      "placeholder": "4:3 placeholder"
+    }
+  ],
+  "links": [
+    {
+      "label": "Back to portfolio",
+      "url": "../../",
+      "note": "Return to the main portfolio page.",
+      "external": false
+    },
+    {
+      "label": "Artist site",
+      "url": "../../../",
+      "note": "Return to the main artist website.",
+      "external": false
+    }
+  ]
+}
