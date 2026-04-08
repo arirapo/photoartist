@@ -1,0 +1,239 @@
+:root {
+  --bg: #f4f1eb;
+  --panel: #fbfaf7;
+  --text: #1d1c1a;
+  --muted: #6f6b65;
+  --line: rgba(29, 28, 26, 0.12);
+  --line-strong: rgba(29, 28, 26, 0.22);
+  --max-width: 1080px;
+  --radius: 20px;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.04);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+}
+
+.project-shell {
+  min-height: 100vh;
+}
+
+.project-header,
+.project-main,
+.project-footer {
+  width: min(calc(100% - 48px), var(--max-width));
+  margin: 0 auto;
+}
+
+.project-header {
+  padding: 36px 0 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.project-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 34px;
+}
+
+.project-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+
+.project-nav a:hover,
+.project-nav a:focus-visible {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.project-kicker,
+.section-label {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.project-intro h1 {
+  margin: 0;
+  font-size: clamp(2.3rem, 5vw, 4.2rem);
+  line-height: 0.95;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.project-summary {
+  margin: 18px 0 0;
+  max-width: 760px;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+
+.project-facts {
+  margin: 30px 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.project-facts div {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.project-facts dt {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.project-facts dd {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.project-main {
+  padding: 36px 0 80px;
+}
+
+.project-section {
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+
+.section-heading h2 {
+  margin: 0 0 18px;
+  font-size: clamp(1.4rem, 2.8vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.text-block {
+  max-width: 760px;
+}
+
+.text-block p {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.image-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.image-placeholder {
+  aspect-ratio: 4 / 3;
+  background:
+    linear-gradient(135deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.image-caption {
+  padding: 14px 16px 16px;
+}
+
+.image-caption h3 {
+  margin: 0 0 6px;
+  font-size: 1.08rem;
+  font-weight: 500;
+}
+
+.image-caption p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: 760px;
+}
+
+.link-list li {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.link-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.link-list a {
+  text-decoration: none;
+  font-style: italic;
+}
+
+.link-list a:hover,
+.link-list a:focus-visible {
+  text-decoration: underline;
+}
+
+.link-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.project-footer {
+  padding: 20px 0 34px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 860px) {
+  .project-facts,
+  .image-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .project-header,
+  .project-main,
+  .project-footer {
+    width: min(calc(100% - 28px), var(--max-width));
+  }
+}
