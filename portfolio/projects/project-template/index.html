@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Template</title>
+  <meta
+    name="description"
+    content="A modular project template for the static portfolio."
+  />
+  <link rel="stylesheet" href="./project.css" />
+</head>
+<body>
+  <div class="project-shell">
+    <header class="project-header">
+      <nav class="project-nav" aria-label="Project navigation">
+        <a href="../../">Back to portfolio</a>
+        <a href="../../../">Artist site</a>
+      </nav>
+
+      <div class="project-intro">
+        <p class="project-kicker" id="projectType">Project</p>
+        <h1 id="projectTitle">Project Template</h1>
+        <p class="project-summary" id="projectSummary">
+          A starter structure for a future portfolio project.
+        </p>
+
+        <dl class="project-facts">
+          <div>
+            <dt>Year</dt>
+            <dd id="projectYear">Ongoing</dd>
+          </div>
+          <div>
+            <dt>Medium</dt>
+            <dd id="projectMedium">Photography / Web</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd id="projectStatus">In preparation</dd>
+          </div>
+        </dl>
+      </div>
+    </header>
+
+    <main class="project-main">
+      <section class="project-section">
+        <div class="section-heading">
+          <p class="section-label">Overview</p>
+          <h2>About this project</h2>
+        </div>
+        <div class="text-block" id="projectDescription"></div>
+      </section>
+
+      <section class="project-section">
+        <div class="section-heading">
+          <p class="section-label">Selections</p>
+          <h2>Images / placeholders</h2>
+        </div>
+
+        <div class="image-grid" id="imageGrid"></div>
+      </section>
+
+      <section class="project-section">
+        <div class="section-heading">
+          <p class="section-label">Links</p>
+          <h2>Related paths</h2>
+        </div>
+
+        <ul class="link-list" id="projectLinks"></ul>
+      </section>
+    </main>
+
+    <footer class="project-footer">
+      <p>Project template / static portfolio module</p>
+    </footer>
+  </div>
+
+  <script src="./project.js"></script>
+</body>
+</html>
