@@ -114,6 +114,18 @@
       outline: none;
     }
 
+    .audio-status {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 12;
+      color: rgba(255, 255, 255, 0.26);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
     .video-overlay {
       position: absolute;
       inset: 0;
@@ -144,6 +156,12 @@
 
       .video-link {
         font-size: 0.72rem;
+      }
+
+      .audio-status {
+        right: 14px;
+        bottom: 14px;
+        font-size: 0.64rem;
       }
     }
   </style>
@@ -178,8 +196,56 @@
       </div>
     </div>
 
+    <div class="audio-status" id="audio-status">Loading sound</div>
     <div class="video-overlay"></div>
   </div>
+
+  <audio
+    id="bg-audio"
+    preload="auto"
+    loop
+  >
+    <source src="video/Icyharmony meditation carpet_01 2.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    const audio = document.getElementById("bg-audio");
+    const audioStatus = document.getElementById("audio-status");
+
+    let audioStarted = false;
+
+    function tryStartAudio() {
+      if (audioStarted) return;
+
+      audio.play().then(() => {
+        audioStarted = true;
+        audioStatus.textContent = "Sound on";
+      }).catch(() => {
+        audioStatus.textContent = "Tap to enable sound";
+      });
+    }
+
+    audio.addEventListener("canplaythrough", () => {
+      audioStatus.textContent = "Sound ready";
+      tryStartAudio();
+    });
+
+    document.addEventListener("pointerdown", () => {
+      tryStartAudio();
+    }, { passive: true });
+
+    document.addEventListener("touchstart", () => {
+      tryStartAudio();
+    }, { passive: true });
+
+    document.addEventListener("click", () => {
+      tryStartAudio();
+    }, { passive: true });
+
+    window.addEventListener("load", () => {
+      tryStartAudio();
+    });
+  </script>
 
 </body>
 </html>
