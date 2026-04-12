@@ -58,8 +58,6 @@
       box-shadow:
         0 10px 35px rgba(0, 0, 0, 0.35),
         inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-      display: grid;
-      place-items: center;
       overflow: hidden;
     }
 
@@ -74,32 +72,24 @@
         rgba(0,0,0,0.08)
       );
       pointer-events: none;
-    }
-
-    .inner {
-      position: relative;
       z-index: 2;
-      text-align: center;
-      padding: 24px;
     }
 
-    .window-label {
-      margin: 0 0 18px;
-      color: rgba(255, 255, 255, 0.34);
-      font-size: 0.72rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
+    .video-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #000;
     }
 
-    .link-group {
-      display: flex;
-      gap: 18px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .video-link {
-      color: rgba(255, 255, 255, 0.52);
+    .bottom-link {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 10;
+      color: rgba(255, 255, 255, 0.48);
       font-size: 0.78rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -108,9 +98,9 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .video-link:hover,
-    .video-link:focus-visible {
-      color: rgba(255, 255, 255, 0.78);
+    .bottom-link:hover,
+    .bottom-link:focus-visible {
+      color: rgba(255, 255, 255, 0.72);
       outline: none;
     }
 
@@ -124,6 +114,12 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .audio-status.is-visible {
+      opacity: 1;
     }
 
     .video-overlay {
@@ -150,11 +146,8 @@
         width: min(500px, 88vw);
       }
 
-      .window-label {
-        font-size: 0.68rem;
-      }
-
-      .video-link {
+      .bottom-link {
+        bottom: 18px;
         font-size: 0.72rem;
       }
 
@@ -172,31 +165,25 @@
     <div class="title-label">Traces Between 2020–2026</div>
 
     <div class="video-window">
-      <div class="inner">
-        <p class="window-label">Video Access</p>
-        <div class="link-group">
-          <a
-            class="video-link"
-            href="https://drive.google.com/file/d/13Y63iennm2v7qwU6zVS0j4LEfKBhj11m/view?usp=drivesdk"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open Video
-          </a>
-
-          <a
-            class="video-link"
-            href="https://drive.google.com/file/d/1kx8hfqeIPQHrrW0C8vLhRItxdZNbSoW7/view?usp=drivesdk"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Original Quality
-          </a>
-        </div>
-      </div>
+      <iframe
+        class="video-frame"
+        src="https://drive.google.com/file/d/13Y63iennm2v7qwU6zVS0j4LEfKBhj11m/preview"
+        allow="autoplay"
+        allowfullscreen
+      ></iframe>
     </div>
 
-    <div class="audio-status" id="audio-status">Loading sound</div>
+    <a
+      class="bottom-link"
+      href="https://drive.google.com/file/d/1kx8hfqeIPQHrrW0C8vLhRItxdZNbSoW7/view?usp=drivesdk"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Open original quality video"
+    >
+      Original Quality
+    </a>
+
+    <div class="audio-status" id="audio-status">Tap to enable sound</div>
     <div class="video-overlay"></div>
   </div>
 
@@ -205,7 +192,7 @@
     preload="auto"
     loop
   >
-    <source src="video/Icyharmony meditation carpet_01 2.mp3" type="audio/mpeg" />
+    <source src="Icyharmony meditation carpet_01 2.mp3" type="audio/mpeg" />
   </audio>
 
   <script>
@@ -213,34 +200,47 @@
     const audioStatus = document.getElementById("audio-status");
 
     let audioStarted = false;
+    let autoplayBlocked = false;
+
+    function showAudioNotice(text) {
+      audioStatus.textContent = text;
+      audioStatus.classList.add("is-visible");
+    }
+
+    function hideAudioNotice() {
+      audioStatus.classList.remove("is-visible");
+    }
 
     function tryStartAudio() {
       if (audioStarted) return;
 
       audio.play().then(() => {
         audioStarted = true;
-        audioStatus.textContent = "Sound on";
+        hideAudioNotice();
       }).catch(() => {
-        audioStatus.textContent = "Tap to enable sound";
+        autoplayBlocked = true;
+        showAudioNotice("Tap to enable sound");
       });
     }
 
     audio.addEventListener("canplaythrough", () => {
-      audioStatus.textContent = "Sound ready";
       tryStartAudio();
     });
 
-    document.addEventListener("pointerdown", () => {
+    function unlockAudioOnce() {
+      if (audioStarted) return;
       tryStartAudio();
-    }, { passive: true });
 
-    document.addEventListener("touchstart", () => {
-      tryStartAudio();
-    }, { passive: true });
+      if (autoplayBlocked) {
+        setTimeout(() => {
+          if (audioStarted) hideAudioNotice();
+        }, 300);
+      }
+    }
 
-    document.addEventListener("click", () => {
-      tryStartAudio();
-    }, { passive: true });
+    document.addEventListener("pointerdown", unlockAudioOnce, { passive: true });
+    document.addEventListener("touchstart", unlockAudioOnce, { passive: true });
+    document.addEventListener("click", unlockAudioOnce, { passive: true });
 
     window.addEventListener("load", () => {
       tryStartAudio();
