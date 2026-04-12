@@ -29,10 +29,10 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
 
-    video {
+    .video-frame {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      border: 0;
       display: block;
       background: #000;
     }
@@ -58,7 +58,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(to top, rgba(0,0,0,0.20), transparent 45%);
+      background: linear-gradient(to top, rgba(0,0,0,0.16), transparent 45%);
     }
 
     .bottom-links {
@@ -82,7 +82,7 @@
       text-transform: uppercase;
       text-decoration: none;
       cursor: pointer;
-      transition: color 0.25s ease, opacity 0.8s ease;
+      transition: color 0.25s ease;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -90,28 +90,6 @@
     .bottom-link:focus-visible {
       color: rgba(255, 255, 255, 0.72);
       outline: none;
-    }
-
-    .message {
-      position: absolute;
-      inset: 0;
-      display: none;
-      place-items: center;
-      padding: 24px;
-      text-align: center;
-      color: rgba(255,255,255,0.7);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      background: rgba(0,0,0,0.82);
-      z-index: 20;
-    }
-
-    .message.is-visible {
-      display: grid;
-    }
-
-    .message-inner {
-      max-width: 42rem;
     }
 
     @media (max-width: 900px) {
@@ -143,64 +121,35 @@
   <div class="scene">
     <div class="title-label">Traces Between 2020–2026</div>
 
-    <video
-      id="traces-video"
-      playsinline
-      controls
-      preload="none"
-    >
-      <source
-        src="https://drive.google.com/uc?export=download&id=13Y63iennm2v7qwU6zVS0j4LEfKBhj11m"
-        type="video/mp4"
-      />
-      Your browser does not support the video tag.
-    </video>
+    <iframe
+      class="video-frame"
+      src="https://drive.google.com/file/d/13Y63iennm2v7qwU6zVS0j4LEfKBhj11m/preview"
+      allow="autoplay"
+      allowfullscreen
+    ></iframe>
 
     <div class="video-overlay"></div>
 
     <div class="bottom-links">
-      <button
+      <a
         class="bottom-link"
-        id="restart-btn"
-        type="button"
-        aria-label="Restart video"
+        href="https://drive.google.com/file/d/13Y63iennm2v7qwU6zVS0j4LEfKBhj11m/view?usp=drivesdk"
+        target="_blank"
+        rel="noopener noreferrer"
       >
-        Restart Trace
-      </button>
+        Open Video
+      </a>
 
       <a
         class="bottom-link"
         href="https://drive.google.com/file/d/1kx8hfqeIPQHrrW0C8vLhRItxdZNbSoW7/view?usp=drivesdk"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Open original quality video"
       >
         Original Quality
       </a>
     </div>
-
-    <div class="message" id="message">
-      <div class="message-inner">
-        The embedded video could not be loaded in this form.<br>
-        Google Drive may limit direct playback even when the file itself is available.
-      </div>
-    </div>
   </div>
-
-  <script>
-    const video = document.getElementById("traces-video");
-    const restartBtn = document.getElementById("restart-btn");
-    const message = document.getElementById("message");
-
-    restartBtn.addEventListener("click", () => {
-      video.currentTime = 0;
-      video.play().catch(() => {});
-    });
-
-    video.addEventListener("error", () => {
-      message.classList.add("is-visible");
-    });
-  </script>
 
 </body>
 </html>
