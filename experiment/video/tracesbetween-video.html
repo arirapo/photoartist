@@ -29,14 +29,6 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
 
-    .video-frame {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-      background: #000;
-    }
-
     .title-label {
       position: absolute;
       top: 18px;
@@ -54,42 +46,79 @@
       backdrop-filter: blur(6px);
     }
 
-    .video-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(to top, rgba(0,0,0,0.16), transparent 45%);
-    }
-
-    .bottom-links {
+    .video-window {
       position: absolute;
       left: 50%;
-      bottom: 22px;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      gap: 18px;
-      align-items: center;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(500px, 82vw);
+      aspect-ratio: 2 / 1;
+      background: #050505;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.35),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
     }
 
-    .bottom-link {
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: rgba(255, 255, 255, 0.48);
+    .video-window::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0.01) 30%,
+        rgba(0,0,0,0.08)
+      );
+      pointer-events: none;
+    }
+
+    .inner {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .window-label {
+      margin: 0 0 18px;
+      color: rgba(255, 255, 255, 0.34);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .link-group {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .video-link {
+      color: rgba(255, 255, 255, 0.52);
       font-size: 0.78rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       text-decoration: none;
-      cursor: pointer;
       transition: color 0.25s ease;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .bottom-link:hover,
-    .bottom-link:focus-visible {
-      color: rgba(255, 255, 255, 0.72);
+    .video-link:hover,
+    .video-link:focus-visible {
+      color: rgba(255, 255, 255, 0.78);
       outline: none;
+    }
+
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(0,0,0,0.18), transparent 45%);
     }
 
     @media (max-width: 900px) {
@@ -105,12 +134,15 @@
         font-size: 0.72rem;
       }
 
-      .bottom-links {
-        bottom: 18px;
-        gap: 14px;
+      .video-window {
+        width: min(500px, 88vw);
       }
 
-      .bottom-link {
+      .window-label {
+        font-size: 0.68rem;
+      }
+
+      .video-link {
         font-size: 0.72rem;
       }
     }
@@ -121,34 +153,32 @@
   <div class="scene">
     <div class="title-label">Traces Between 2020–2026</div>
 
-    <iframe
-      class="video-frame"
-      src="https://drive.google.com/file/d/13Y63iennm2v7qwU6zVS0j4LEfKBhj11m/preview"
-      allow="autoplay"
-      allowfullscreen
-    ></iframe>
+    <div class="video-window">
+      <div class="inner">
+        <p class="window-label">Video Access</p>
+        <div class="link-group">
+          <a
+            class="video-link"
+            href="https://drive.google.com/file/d/13Y63iennm2v7qwU6zVS0j4LEfKBhj11m/view?usp=drivesdk"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open Video
+          </a>
+
+          <a
+            class="video-link"
+            href="https://drive.google.com/file/d/1kx8hfqeIPQHrrW0C8vLhRItxdZNbSoW7/view?usp=drivesdk"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Original Quality
+          </a>
+        </div>
+      </div>
+    </div>
 
     <div class="video-overlay"></div>
-
-    <div class="bottom-links">
-      <a
-        class="bottom-link"
-        href="https://drive.google.com/file/d/13Y63iennm2v7qwU6zVS0j4LEfKBhj11m/view?usp=drivesdk"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Open Video
-      </a>
-
-      <a
-        class="bottom-link"
-        href="https://drive.google.com/file/d/1kx8hfqeIPQHrrW0C8vLhRItxdZNbSoW7/view?usp=drivesdk"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Original Quality
-      </a>
-    </div>
   </div>
 
 </body>
