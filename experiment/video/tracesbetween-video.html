@@ -1,1 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traces Between — Video</title>
 
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .scene {
+      position: relative;
+      width: min(92vw, 1400px);
+      max-height: 92vh;
+      aspect-ratio: 2 / 1;
+      background: #000;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #000;
+    }
+
+    .title-label {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 8;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      color: rgba(255, 255, 255, 0.60);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+    }
+
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(0,0,0,0.22), transparent 45%);
+    }
+
+    .controls-hint {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 1.2s ease, color 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .controls-hint:hover,
+    .controls-hint:focus-visible {
+      color: rgba(255, 255, 255, 0.72);
+      outline: none;
+    }
+
+    .message {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      text-align: center;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      background: rgba(0,0,0,0.82);
+      z-index: 20;
+    }
+
+    .message.is-visible {
+      display: grid;
+    }
+
+    .message-inner {
+      max-width: 42rem;
+    }
+
+    @media (max-width: 900px) {
+      .scene {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        aspect-ratio: auto;
+      }
+
+      .title-label {
+        top: 14px;
+        font-size: 0.72rem;
+      }
+
+      .controls-hint {
+        bottom: 18px;
+        font-size: 0.72rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scene">
+    <div class="title-label">Traces Between 2020–2026</div>
+
+    <video
+      id="traces-video"
+      playsinline
+      controls
+      preload="metadata"
+    >
+      <source
+        src="https://drive.google.com/uc?export=download&id=1UMXaHgikqNzUHVtiPzuKEsrCwHlWyzQW"
+        type="video/mp4"
+      />
+      Your browser does not support the video tag.
+    </video>
+
+    <div class="video-overlay"></div>
+
+    <button
+      class="controls-hint"
+      id="restart-btn"
+      type="button"
+      aria-label="Restart video"
+    >
+      Restart Trace
+    </button>
+
+    <div class="message" id="message">
+      <div class="message-inner">
+        The video could not be loaded from Google Drive in this form.<br />
+        If that happens, the file likely needs another hosting method or a direct media URL.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById("traces-video");
+    const restartBtn = document.getElementById("restart-btn");
+    const message = document.getElementById("message");
+
+    restartBtn.addEventListener("click", () => {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    });
+
+    video.addEventListener("error", () => {
+      message.classList.add("is-visible");
+    });
+  </script>
+
+</body>
+</html>
