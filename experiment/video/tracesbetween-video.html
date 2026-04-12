@@ -58,15 +58,21 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(to top, rgba(0,0,0,0.22), transparent 45%);
+      background: linear-gradient(to top, rgba(0,0,0,0.20), transparent 45%);
     }
 
-    .controls-hint {
+    .bottom-links {
       position: absolute;
       left: 50%;
       bottom: 22px;
       transform: translateX(-50%);
       z-index: 10;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .bottom-link {
       padding: 0;
       border: 0;
       background: transparent;
@@ -74,13 +80,14 @@
       font-size: 0.78rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      text-decoration: none;
       cursor: pointer;
-      transition: opacity 1.2s ease, color 0.25s ease;
+      transition: color 0.25s ease, opacity 0.8s ease;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .controls-hint:hover,
-    .controls-hint:focus-visible {
+    .bottom-link:hover,
+    .bottom-link:focus-visible {
       color: rgba(255, 255, 255, 0.72);
       outline: none;
     }
@@ -120,8 +127,12 @@
         font-size: 0.72rem;
       }
 
-      .controls-hint {
+      .bottom-links {
         bottom: 18px;
+        gap: 14px;
+      }
+
+      .bottom-link {
         font-size: 0.72rem;
       }
     }
@@ -136,10 +147,10 @@
       id="traces-video"
       playsinline
       controls
-      preload="metadata"
+      preload="none"
     >
       <source
-        src="https://drive.google.com/uc?export=download&id=1UMXaHgikqNzUHVtiPzuKEsrCwHlWyzQW"
+        src="https://drive.google.com/uc?export=download&id=13Y63iennm2v7qwU6zVS0j4LEfKBhj11m"
         type="video/mp4"
       />
       Your browser does not support the video tag.
@@ -147,19 +158,31 @@
 
     <div class="video-overlay"></div>
 
-    <button
-      class="controls-hint"
-      id="restart-btn"
-      type="button"
-      aria-label="Restart video"
-    >
-      Restart Trace
-    </button>
+    <div class="bottom-links">
+      <button
+        class="bottom-link"
+        id="restart-btn"
+        type="button"
+        aria-label="Restart video"
+      >
+        Restart Trace
+      </button>
+
+      <a
+        class="bottom-link"
+        href="https://drive.google.com/file/d/1kx8hfqeIPQHrrW0C8vLhRItxdZNbSoW7/view?usp=drivesdk"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open original quality video"
+      >
+        Original Quality
+      </a>
+    </div>
 
     <div class="message" id="message">
       <div class="message-inner">
-        The video could not be loaded from Google Drive in this form.<br />
-        If that happens, the file likely needs another hosting method or a direct media URL.
+        The embedded video could not be loaded in this form.<br>
+        Google Drive may limit direct playback even when the file itself is available.
       </div>
     </div>
   </div>
