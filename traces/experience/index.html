@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traces Experience</title>
+  <style>
+    :root {
+      --bg: #111;
+      --text: #f2f2f2;
+      --muted: #a8a8a8;
+      --line: rgba(255,255,255,0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .app {
+      width: min(94vw, 1400px);
+      margin: 3vh auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .title {
+      letter-spacing: 0.02em;
+    }
+
+    .scene {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      background: #000;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .image-layer,
+    .blur-layer {
+      position: absolute;
+      inset: 0;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      transition: opacity 900ms ease, filter 900ms ease, transform 1200ms ease;
+    }
+
+    .image-layer {
+      opacity: 1;
+      filter: none;
+      transform: scale(1);
+      z-index: 1;
+    }
+
+    .blur-layer {
+      opacity: 0;
+      filter: blur(18px);
+      transform: scale(1.04);
+      z-index: 2;
+    }
+
+    .scene.revealed .blur-layer {
+      opacity: 1;
+    }
+
+    .scene.revealed .image-layer {
+      opacity: 0.18;
+      filter: blur(6px);
+      transform: scale(1.015);
+    }
+
+    .spot {
+      position: absolute;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle,
+          rgba(190, 20, 20, 0.66) 0%,
+          rgba(180, 10, 10, 0.46) 28%,
+          rgba(160, 0, 0, 0.20) 50%,
+          rgba(120, 0, 0, 0.06) 68%,
+          rgba(0,0,0,0) 74%);
+      box-shadow:
+        0 0 22px rgba(180, 0, 0, 0.18),
+        0 0 48px rgba(180, 0, 0, 0.08);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1200ms ease;
+      z-index: 4;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    .spot.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      padding: 2rem;
+    }
+
+    .text-box {
+      max-width: min(760px, 90%);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 900ms ease, transform 900ms ease;
+      pointer-events: none;
+    }
+
+    .scene.revealed .text-box {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .sentence {
+      font-size: clamp(1.15rem, 2.2vw, 1.9rem);
+      line-height: 1.45;
+      margin: 0;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.35);
+      white-space: pre-wrap;
+    }
+
+    .meta {
+      margin-top: 0.9rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+      min-height: 3rem;
+    }
+
+    .next-btn {
+      appearance: none;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.8rem 1rem;
+      font: inherit;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 900ms ease, border-color 300ms ease;
+      cursor: pointer;
+    }
+
+    .next-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .next-btn:hover {
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .state {
+      margin-top: 1rem;
+      text-align: center;
+      color: var(--muted);
+      min-height: 1.5rem;
+    }
+
+    @media (max-width: 800px) {
+      .spot {
+        width: 46px;
+        height: 46px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="title">Traces</div>
+      <div id="counter">Loading…</div>
+    </div>
+
+    <section id="scene" class="scene" aria-label="Traces experience">
+      <div id="imageLayer" class="image-layer"></div>
+      <div id="blurLayer" class="blur-layer"></div>
+      <button id="spot" class="spot" aria-label="Reveal trace"></button>
+
+      <div class="overlay">
+        <div class="text-box">
+          <p id="sentence" class="sentence"></p>
+          <div id="meta" class="meta"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button id="nextBtn" class="next-btn">Another Trace</button>
+    </div>
+
+    <div id="state" class="state"></div>
+  </main>
+
+  <audio id="audioPlayer" preload="none"></audio>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+      authDomain: "photodiarygame.firebaseapp.com",
+      projectId: "photodiarygame",
+      storageBucket: "photodiarygame.firebasestorage.app",
+      messagingSenderId: "745003978989",
+      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+      measurementId: "G-1T7CBFRP55"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Lisää tähän omat audiotiedostosi.
+    // Voi olla GitHub Pages -osoitteita, Firebase Storage -URL:eja tai muita julkisia tiedostoja.
+    const AUDIO_TRACKS = [
+      // "/audio/trace1.mp3",
+      // "/audio/trace2.mp3",
+      // "https://firebasestorage.googleapis.com/...."
+    ];
+
+    const sceneEl = document.getElementById("scene");
+    const imageLayerEl = document.getElementById("imageLayer");
+    const blurLayerEl = document.getElementById("blurLayer");
+    const spotEl = document.getElementById("spot");
+    const sentenceEl = document.getElementById("sentence");
+    const metaEl = document.getElementById("meta");
+    const nextBtnEl = document.getElementById("nextBtn");
+    const stateEl = document.getElementById("state");
+    const counterEl = document.getElementById("counter");
+    const audioPlayerEl = document.getElementById("audioPlayer");
+
+    let traces = [];
+    let currentTrace = null;
+    let recentTraceIds = [];
+    let revealTimeout = null;
+    let nextButtonTimeout = null;
+    let currentAudioUrl = null;
+
+    function setState(msg = "") {
+      stateEl.textContent = msg;
+    }
+
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function chooseRandomAudio(excludeUrl = null) {
+      if (!AUDIO_TRACKS.length) return null;
+      let candidates = AUDIO_TRACKS.filter(url => url !== excludeUrl);
+      if (!candidates.length) candidates = [...AUDIO_TRACKS];
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    function chooseNextTrace() {
+      if (!traces.length) return null;
+
+      let candidates = traces.filter(t => !recentTraceIds.includes(t.id));
+      if (!candidates.length) {
+        candidates = [...traces];
+      }
+
+      const picked = candidates[Math.floor(Math.random() * candidates.length)];
+      return picked;
+    }
+
+    function updateRecent(id) {
+      recentTraceIds.unshift(id);
+      recentTraceIds = recentTraceIds.slice(0, 3);
+    }
+
+    function placeSpot() {
+      const x = randomBetween(14, 86);
+      const y = randomBetween(18, 82);
+      spotEl.style.left = `${x}%`;
+      spotEl.style.top = `${y}%`;
+    }
+
+    function clearTimers() {
+      if (revealTimeout) clearTimeout(revealTimeout);
+      if (nextButtonTimeout) clearTimeout(nextButtonTimeout);
+    }
+
+    function resetScene() {
+      clearTimers();
+      sceneEl.classList.remove("revealed");
+      nextBtnEl.classList.remove("visible");
+      spotEl.classList.remove("active");
+      sentenceEl.textContent = "";
+      metaEl.textContent = "";
+      setState("");
+      audioPlayerEl.pause();
+      audioPlayerEl.currentTime = 0;
+    }
+
+    function renderTrace(trace) {
+      currentTrace = trace;
+      updateRecent(trace.id);
+
+      imageLayerEl.style.backgroundImage = `url("${trace.imageUrl}")`;
+      blurLayerEl.style.backgroundImage = `url("${trace.imageUrl}")`;
+
+      counterEl.textContent = `${traces.length} curated traces`;
+      resetScene();
+
+      revealTimeout = setTimeout(() => {
+        placeSpot();
+        spotEl.classList.add("active");
+        setState("Touch the trace.");
+      }, 1200);
+    }
+
+    async function revealTrace() {
+      if (!currentTrace) return;
+
+      spotEl.classList.remove("active");
+      sceneEl.classList.add("revealed");
+
+      sentenceEl.textContent = currentTrace.sentence || "";
+      metaEl.textContent = currentTrace.participantName
+        ? `— ${currentTrace.participantName}`
+        : "";
+
+      setState("");
+
+      const nextAudio = chooseRandomAudio(currentAudioUrl);
+      if (nextAudio) {
+        currentAudioUrl = nextAudio;
+        audioPlayerEl.src = nextAudio;
+        try {
+          await audioPlayerEl.play();
+        } catch (err) {
+          console.warn("Audio play was blocked or failed:", err);
+        }
+      }
+
+      nextButtonTimeout = setTimeout(() => {
+        nextBtnEl.classList.add("visible");
+      }, 2200);
+    }
+
+    function showAnotherTrace() {
+      const next = chooseNextTrace();
+      if (!next) {
+        setState("No curated traces available.");
+        return;
+      }
+      renderTrace(next);
+    }
+
+    async function loadCuratedPublishedTraces() {
+      try {
+        setState("Loading traces…");
+
+        const q = query(
+          collection(db, "traces_submissions"),
+          where("isCurated", "==", true),
+          where("isPublished", "==", true)
+        );
+
+        const snap = await getDocs(q);
+
+        traces = snap.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }));
+
+        if (!traces.length) {
+          counterEl.textContent = "0 curated traces";
+          setState("No curated and published traces yet.");
+          return;
+        }
+
+        showAnotherTrace();
+      } catch (err) {
+        console.error(err);
+        setState("Failed to load traces.");
+      }
+    }
+
+    spotEl.addEventListener("click", revealTrace);
+    nextBtnEl.addEventListener("click", showAnotherTrace);
+
+    loadCuratedPublishedTraces();
+  </script>
+</body>
+</html>
