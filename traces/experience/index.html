@@ -10,6 +10,7 @@
       --text: #f2f2f2;
       --muted: #a8a8a8;
       --line: rgba(255,255,255,0.12);
+      --image-pad: 20px;
     }
 
     * { box-sizing: border-box; }
@@ -68,37 +69,54 @@
 
     .image-frame {
       position: relative;
-      width: min(100%, 800px);
-      height: min(100%, 800px);
+      width: fit-content;
+      height: fit-content;
+      max-width: min(800px, calc(100% - (2 * var(--image-pad))));
+      max-height: min(800px, calc(100% - (2 * var(--image-pad))));
+      padding: var(--image-pad);
       display: grid;
       place-items: center;
+      background: #000;
+    }
+
+    .main-image-wrap {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      line-height: 0;
     }
 
     .main-image,
     .main-image-blur {
-      position: absolute;
-      max-width: 800px;
-      max-height: 800px;
+      display: block;
+      max-width: min(800px, calc(100vw - 160px));
+      max-height: min(800px, calc(72vh - 120px));
       width: auto;
       height: auto;
       object-fit: contain;
-      transition: opacity 900ms ease, filter 900ms ease, transform 1200ms ease;
       user-select: none;
       -webkit-user-drag: none;
     }
 
     .main-image {
+      position: relative;
       opacity: 1;
       filter: none;
       transform: scale(1);
+      transition: opacity 900ms ease, filter 900ms ease, transform 1200ms ease;
       z-index: 1;
     }
 
     .main-image-blur {
+      position: absolute;
+      inset: 0;
+      margin: auto;
       opacity: 0;
       filter: blur(18px);
       transform: scale(1.03);
+      transition: opacity 900ms ease, filter 900ms ease, transform 1200ms ease;
       z-index: 2;
+      pointer-events: none;
     }
 
     .scene.revealed .main-image {
@@ -226,6 +244,12 @@
         width: 46px;
         height: 46px;
       }
+
+      .main-image,
+      .main-image-blur {
+        max-width: calc(100vw - 80px);
+        max-height: calc(64vh - 100px);
+      }
     }
   </style>
 </head>
@@ -239,8 +263,10 @@
     <section id="scene" class="scene" aria-label="Traces experience">
       <div class="image-stage">
         <div class="image-frame">
-          <img id="mainImage" class="main-image" alt="Trace image" />
-          <img id="mainImageBlur" class="main-image-blur" alt="" aria-hidden="true" />
+          <div class="main-image-wrap">
+            <img id="mainImage" class="main-image" alt="Trace image" />
+            <img id="mainImageBlur" class="main-image-blur" alt="" aria-hidden="true" />
+          </div>
         </div>
       </div>
 
@@ -453,8 +479,6 @@
         audioTracks = snap.docs
           .map(docSnap => extractAudioUrl(docSnap.data()))
           .filter(Boolean);
-
-        console.log("Loaded audio tracks:", audioTracks.length);
       } catch (err) {
         console.error("Failed to load audio observations:", err);
         audioTracks = [];
