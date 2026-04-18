@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traces — Submit</title>
+  <style>
+    :root {
+      --bg: #111;
+      --panel: #1a1a1a;
+      --text: #f2f2f2;
+      --muted: #a8a8a8;
+      --line: #333;
+      --accent: #cfcfcf;
+      --danger: #ff8d8d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      width: min(720px, 92vw);
+      margin: 48px auto 64px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 500;
+      margin: 0 0 0.4em;
+      letter-spacing: 0.01em;
+    }
+
+    .intro {
+      color: var(--muted);
+      max-width: 60ch;
+      margin-bottom: 2rem;
+    }
+
+    form {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 1.25rem;
+      border-radius: 14px;
+    }
+
+    .field {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"],
+    textarea,
+    input[type="file"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #101010;
+      color: var(--text);
+      padding: 0.85rem 0.95rem;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .hint,
+    .counter,
+    .status,
+    .error {
+      font-size: 0.92rem;
+      margin-top: 0.4rem;
+    }
+
+    .hint,
+    .counter,
+    .status {
+      color: var(--muted);
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .checkbox {
+      display: flex;
+      gap: 0.7rem;
+      align-items: flex-start;
+      margin: 1.2rem 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .checkbox input {
+      margin-top: 0.2rem;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #202020;
+      color: var(--text);
+      padding: 0.9rem 1.2rem;
+      border-radius: 999px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .preview {
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    .preview img {
+      display: block;
+      max-width: 100%;
+      max-height: 360px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .result {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #151515;
+      display: none;
+    }
+
+    .result a {
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    @media (max-width: 680px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Traces</h1>
+    <p class="intro">
+      Submit one image and one sentence. Your contribution will generate a personal link
+      leading back to your trace. Selected submissions may become part of the curated artwork.
+    </p>
+
+    <form id="traceForm" novalidate>
+      <div class="field">
+        <label for="image">Image *</label>
+        <input id="image" name="image" type="file" accept="image/*" required />
+        <div class="hint">One image file. Recommended max size: 10 MB.</div>
+        <div class="preview" id="previewWrap">
+          <img id="previewImg" alt="Selected image preview" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="participantName">Name or pseudonym *</label>
+          <input id="participantName" name="participantName" type="text" maxlength="80" required />
+        </div>
+
+        <div class="field">
+          <label for="imageTitle">Image title</label>
+          <input id="imageTitle" name="imageTitle" type="text" maxlength="120" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="sentence">Sentence *</label>
+        <textarea id="sentence" name="sentence" maxlength="120" required></textarea>
+        <div class="counter"><span id="charCount">0</span> / 120</div>
+      </div>
+
+      <label class="checkbox">
+        <input id="consent" type="checkbox" required />
+        <span>
+          I understand that submitted works may be curated and edited lightly for presentation
+          as part of the artwork.
+        </span>
+      </label>
+
+      <button id="submitBtn" type="submit">Submit trace</button>
+      <div id="status" class="status" aria-live="polite"></div>
+      <div id="error" class="error" aria-live="polite"></div>
+    </form>
+
+    <section id="result" class="result">
+      <strong>Trace submitted.</strong>
+      <p>Your personal link:</p>
+      <p><a id="resultLink" href="#" target="_blank" rel="noopener"></a></p>
+      <p class="hint">
+        You can later turn this link into a QR code, or generate the QR automatically in the next step.
+      </p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+      authDomain: "photodiarygame.firebaseapp.com",
+      projectId: "photodiarygame",
+      storageBucket: "photodiarygame.firebasestorage.app",
+      messagingSenderId: "745003978989",
+      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+      measurementId: "G-1T7CBFRP55"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    const form = document.getElementById("traceForm");
+    const imageInput = document.getElementById("image");
+    const participantNameInput = document.getElementById("participantName");
+    const imageTitleInput = document.getElementById("imageTitle");
+    const sentenceInput = document.getElementById("sentence");
+    const consentInput = document.getElementById("consent");
+    const charCount = document.getElementById("charCount");
+    const statusEl = document.getElementById("status");
+    const errorEl = document.getElementById("error");
+    const submitBtn = document.getElementById("submitBtn");
+    const previewWrap = document.getElementById("previewWrap");
+    const previewImg = document.getElementById("previewImg");
+    const resultBox = document.getElementById("result");
+    const resultLink = document.getElementById("resultLink");
+
+    const TRACE_BASE_URL = `${window.location.origin}/traces/t/`;
+
+    function setStatus(msg = "") {
+      statusEl.textContent = msg;
+    }
+
+    function setError(msg = "") {
+      errorEl.textContent = msg;
+    }
+
+    function makeSlug() {
+      const rand = Math.random().toString(36).slice(2, 8);
+      return `trace-${Date.now().toString(36)}-${rand}`;
+    }
+
+    function getFileExtension(fileName) {
+      const parts = fileName.split(".");
+      return parts.length > 1 ? parts.pop().toLowerCase() : "jpg";
+    }
+
+    function sanitizeExtension(ext) {
+      const ok = ["jpg", "jpeg", "png", "webp", "gif", "avif"];
+      return ok.includes(ext) ? ext : "jpg";
+    }
+
+    sentenceInput.addEventListener("input", () => {
+      charCount.textContent = sentenceInput.value.length;
+    });
+
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files?.[0];
+      if (!file) {
+        previewWrap.style.display = "none";
+        previewImg.removeAttribute("src");
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      previewImg.src = objectUrl;
+      previewWrap.style.display = "block";
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setError("");
+      setStatus("");
+      resultBox.style.display = "none";
+
+      const file = imageInput.files?.[0];
+      const participantName = participantNameInput.value.trim();
+      const imageTitle = imageTitleInput.value.trim();
+      const sentence = sentenceInput.value.trim();
+
+      if (!file) {
+        setError("Please choose an image.");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setError("The selected file is not an image.");
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        setError("Image is too large. Maximum size is 10 MB.");
+        return;
+      }
+
+      if (!participantName) {
+        setError("Please enter your name or pseudonym.");
+        return;
+      }
+
+      if (!sentence) {
+        setError("Please enter one sentence.");
+        return;
+      }
+
+      if (sentence.length > 120) {
+        setError("Sentence must be 120 characters or fewer.");
+        return;
+      }
+
+      if (!consentInput.checked) {
+        setError("Please confirm the submission notice.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      setStatus("Uploading trace...");
+
+      try {
+        const slug = makeSlug();
+        const ext = sanitizeExtension(getFileExtension(file.name));
+        const storagePath = `traces/uploads/${slug}.${ext}`;
+        const storageRef = ref(storage, storagePath);
+
+        await uploadBytes(storageRef, file, {
+          contentType: file.type
+        });
+
+        const imageUrl = await getDownloadURL(storageRef);
+        const qrUrl = `${TRACE_BASE_URL}${slug}/`;
+
+        const docRef = doc(collection(db, "traces_submissions"));
+
+        const traceData = {
+          imageUrl,
+          sentence,
+          participantName,
+          imageTitle: imageTitle || "",
+          slug,
+          qrUrl,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          isCurated: false,
+          isPublished: false,
+          isArchived: false,
+          curatedAt: null,
+          publishedAt: null,
+          curatorEdited: false,
+          curatorNotes: ""
+        };
+
+        await setDoc(docRef, traceData);
+
+        setStatus("Trace uploaded.");
+        resultLink.href = qrUrl;
+        resultLink.textContent = qrUrl;
+        resultBox.style.display = "block";
+        form.reset();
+        charCount.textContent = "0";
+        previewWrap.style.display = "none";
+        previewImg.removeAttribute("src");
+      } catch (err) {
+        console.error(err);
+        setError(err?.message || "Something went wrong during submission.");
+        setStatus("");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
