@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traces — QR Gallery</title>
+  <style>
+    :root {
+      --bg: #111;
+      --panel: #171717;
+      --text: #f2f2f2;
+      --muted: #a8a8a8;
+      --line: rgba(255,255,255,0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .wrap {
+      width: min(1400px, 94vw);
+      margin: 42px auto 60px;
+    }
+
+    h1 {
+      margin: 0 0 0.35em;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .intro {
+      margin: 0 0 1.8rem;
+      color: var(--muted);
+      max-width: 70ch;
+      line-height: 1.55;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+    }
+
+    .controls label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .controls input,
+    .controls select,
+    .controls button {
+      font: inherit;
+    }
+
+    .controls input,
+    .controls select {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #101010;
+      color: var(--text);
+      padding: 0.75rem 0.85rem;
+      min-width: 220px;
+    }
+
+    .controls button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #202020;
+      color: var(--text);
+      padding: 0.8rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      align-self: end;
+    }
+
+    .controls button:hover {
+      border-color: rgba(255,255,255,0.22);
+    }
+
+    .state {
+      min-height: 1.4rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .item {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1rem;
+      display: grid;
+      gap: 0.8rem;
+      align-content: start;
+      min-height: 100%;
+    }
+
+    .qr-box {
+      background: white;
+      border-radius: 12px;
+      padding: 10px;
+      width: fit-content;
+      justify-self: center;
+    }
+
+    .qr-box canvas,
+    .qr-box img {
+      display: block;
+      width: 180px;
+      height: 180px;
+    }
+
+    .meta {
+      text-align: center;
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .name {
+      font-size: 0.98rem;
+      line-height: 1.35;
+    }
+
+    .title {
+      font-size: 0.86rem;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+
+    .slug {
+      font-size: 0.8rem;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    .links {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.2rem;
+    }
+
+    .links a {
+      color: var(--text);
+      font-size: 0.86rem;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .links a:hover {
+      border-color: var(--text);
+    }
+
+    .empty {
+      padding: 1rem 1.1rem;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      color: var(--muted);
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: black;
+      }
+
+      .wrap {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .controls,
+      .state,
+      .intro {
+        display: none;
+      }
+
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12mm;
+      }
+
+      .item {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+        background: white;
+        color: black;
+      }
+
+      .name,
+      .links a {
+        color: black;
+      }
+
+      .title,
+      .slug,
+      .topbar {
+        color: #555;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Traces — QR Gallery</h1>
+    <p class="intro">
+      A minimalist gallery of curated traces. Each code leads to a personal trace page.
+    </p>
+
+    <div class="topbar">
+      <div>Curated and published traces</div>
+      <div id="counter">Loading…</div>
+    </div>
+
+    <section class="controls">
+      <div>
+        <label for="searchInput">Search</label>
+        <input id="searchInput" type="text" placeholder="Name, title, slug…" />
+      </div>
+
+      <div>
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect">
+          <option value="name">Name</option>
+          <option value="title">Image title</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+      </div>
+
+      <button id="printBtn" type="button">Print</button>
+    </section>
+
+    <div id="state" class="state"></div>
+    <section id="grid" class="grid"></section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+      authDomain: "photodiarygame.firebaseapp.com",
+      projectId: "photodiarygame",
+      storageBucket: "photodiarygame.firebasestorage.app",
+      messagingSenderId: "745003978989",
+      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+      measurementId: "G-1T7CBFRP55"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const gridEl = document.getElementById("grid");
+    const stateEl = document.getElementById("state");
+    const counterEl = document.getElementById("counter");
+    const searchInputEl = document.getElementById("searchInput");
+    const sortSelectEl = document.getElementById("sortSelect");
+    const printBtnEl = document.getElementById("printBtn");
+
+    let allItems = [];
+
+    function setState(msg = "") {
+      stateEl.textContent = msg;
+    }
+
+    function formatDate(value) {
+      if (!value) return 0;
+      if (typeof value.toDate === "function") return value.toDate().getTime();
+      try {
+        return new Date(value).getTime();
+      } catch {
+        return 0;
+      }
+    }
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function filteredItems() {
+      const search = searchInputEl.value.trim().toLowerCase();
+      const sort = sortSelectEl.value;
+
+      let items = [...allItems];
+
+      if (search) {
+        items = items.filter(item => {
+          const blob = [
+            item.participantName || "",
+            item.imageTitle || "",
+            item.slug || "",
+            item.qrUrl || ""
+          ].join(" ").toLowerCase();
+
+          return blob.includes(search);
+        });
+      }
+
+      if (sort === "title") {
+        items.sort((a, b) => (a.imageTitle || "").localeCompare(b.imageTitle || ""));
+      } else if (sort === "newest") {
+        items.sort((a, b) => formatDate(b.createdAt) - formatDate(a.createdAt));
+      } else if (sort === "oldest") {
+        items.sort((a, b) => formatDate(a.createdAt) - formatDate(b.createdAt));
+      } else {
+        items.sort((a, b) => (a.participantName || "").localeCompare(b.participantName || ""));
+      }
+
+      return items;
+    }
+
+    function renderQrCodes() {
+      const items = filteredItems();
+      counterEl.textContent = `${items.length} traces`;
+
+      if (!items.length) {
+        gridEl.innerHTML = `<div class="empty">No QR traces match the current view.</div>`;
+        return;
+      }
+
+      gridEl.innerHTML = items.map((item, index) => `
+        <article class="item">
+          <div class="qr-box" id="qr-${index}"></div>
+
+          <div class="meta">
+            <div class="name">${escapeHtml(item.participantName || "Untitled trace")}</div>
+            ${item.imageTitle ? `<div class="title">${escapeHtml(item.imageTitle)}</div>` : ``}
+            <div class="slug">${escapeHtml(item.slug || "")}</div>
+          </div>
+
+          <div class="links">
+            <a href="${escapeHtml(item.qrUrl || "#")}" target="_blank" rel="noopener">Open trace</a>
+          </div>
+        </article>
+      `).join("");
+
+      items.forEach((item, index) => {
+        const target = document.getElementById(`qr-${index}`);
+        if (!target || !item.qrUrl) return;
+
+        new QRCode(target, {
+          text: item.qrUrl,
+          width: 180,
+          height: 180,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      });
+    }
+
+    async function loadQrGallery() {
+      try {
+        setState("Loading QR gallery…");
+
+        const q = query(
+          collection(db, "traces_submissions"),
+          where("isCurated", "==", true),
+          where("isPublished", "==", true)
+        );
+
+        const snap = await getDocs(q);
+
+        allItems = snap.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }));
+
+        setState("");
+        renderQrCodes();
+      } catch (err) {
+        console.error(err);
+        setState("Failed to load QR gallery.");
+        counterEl.textContent = "Error";
+      }
+    }
+
+    searchInputEl.addEventListener("input", renderQrCodes);
+    sortSelectEl.addEventListener("change", renderQrCodes);
+    printBtnEl.addEventListener("click", () => window.print());
+
+    await loadQrGallery();
+  </script>
+</body>
+</html>
