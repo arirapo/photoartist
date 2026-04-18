@@ -50,14 +50,14 @@
     .scene {
       position: relative;
       width: 100%;
-      aspect-ratio: 2 / 1;
+      min-height: 72vh;
       background: #000;
       overflow: hidden;
       border: 1px solid var(--line);
     }
 
-    .image-layer,
-    .blur-layer {
+    .bg-layer,
+    .bg-blur-layer {
       position: absolute;
       inset: 0;
       background-position: center center;
@@ -66,28 +66,83 @@
       transition: opacity 900ms ease, filter 900ms ease, transform 1200ms ease;
     }
 
-    .image-layer {
+    .bg-layer {
+      opacity: 0.42;
+      filter: blur(0px);
+      transform: scale(1.02);
+      z-index: 1;
+    }
+
+    .bg-blur-layer {
+      opacity: 0;
+      filter: blur(28px);
+      transform: scale(1.08);
+      z-index: 2;
+    }
+
+    .scene.revealed .bg-blur-layer {
+      opacity: 0.9;
+    }
+
+    .scene.revealed .bg-layer {
+      opacity: 0.18;
+      filter: blur(8px);
+      transform: scale(1.04);
+    }
+
+    .image-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      padding: clamp(16px, 3vw, 36px);
+      pointer-events: none;
+    }
+
+    .image-frame {
+      position: relative;
+      width: min(100%, 800px);
+      height: min(100%, 800px);
+      display: grid;
+      place-items: center;
+    }
+
+    .main-image,
+    .main-image-blur {
+      position: absolute;
+      max-width: 800px;
+      max-height: 800px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      transition: opacity 900ms ease, filter 900ms ease, transform 1200ms ease;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .main-image {
       opacity: 1;
       filter: none;
       transform: scale(1);
       z-index: 1;
     }
 
-    .blur-layer {
+    .main-image-blur {
       opacity: 0;
       filter: blur(18px);
-      transform: scale(1.04);
+      transform: scale(1.03);
       z-index: 2;
     }
 
-    .scene.revealed .blur-layer {
-      opacity: 1;
+    .scene.revealed .main-image {
+      opacity: 0.14;
+      filter: blur(6px);
+      transform: scale(1.01);
     }
 
-    .scene.revealed .image-layer {
-      opacity: 0.18;
-      filter: blur(6px);
-      transform: scale(1.015);
+    .scene.revealed .main-image-blur {
+      opacity: 0.92;
     }
 
     .spot {
@@ -109,9 +164,10 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 1200ms ease;
-      z-index: 4;
+      z-index: 6;
       touch-action: manipulation;
       cursor: pointer;
+      border: 0;
     }
 
     .spot.active {
@@ -122,7 +178,7 @@
     .overlay {
       position: absolute;
       inset: 0;
-      z-index: 5;
+      z-index: 7;
       display: grid;
       place-items: center;
       pointer-events: none;
@@ -196,6 +252,10 @@
     }
 
     @media (max-width: 800px) {
+      .scene {
+        min-height: 64vh;
+      }
+
       .spot {
         width: 46px;
         height: 46px;
@@ -211,8 +271,16 @@
     </div>
 
     <section id="scene" class="scene" aria-label="Traces experience">
-      <div id="imageLayer" class="image-layer"></div>
-      <div id="blurLayer" class="blur-layer"></div>
+      <div id="bgLayer" class="bg-layer"></div>
+      <div id="bgBlurLayer" class="bg-blur-layer"></div>
+
+      <div class="image-stage">
+        <div class="image-frame">
+          <img id="mainImage" class="main-image" alt="Trace image" />
+          <img id="mainImageBlur" class="main-image-blur" alt="" aria-hidden="true" />
+        </div>
+      </div>
+
       <button id="spot" class="spot" aria-label="Reveal trace"></button>
 
       <div class="overlay">
@@ -255,17 +323,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Lisää tähän omat audiotiedostosi.
-    // Voi olla GitHub Pages -osoitteita, Firebase Storage -URL:eja tai muita julkisia tiedostoja.
-    const AUDIO_TRACKS = [
-      // "/audio/trace1.mp3",
-      // "/audio/trace2.mp3",
-      // "https://firebasestorage.googleapis.com/...."
-    ];
-
     const sceneEl = document.getElementById("scene");
-    const imageLayerEl = document.getElementById("imageLayer");
-    const blurLayerEl = document.getElementById("blurLayer");
+    const bgLayerEl = document.getElementById("bgLayer");
+    const bgBlurLayerEl = document.getElementById("bgBlurLayer");
+    const mainImageEl = document.getElementById("mainImage");
+    const mainImageBlurEl = document.getElementById("mainImageBlur");
     const spotEl = document.getElementById("spot");
     const sentenceEl = document.getElementById("sentence");
     const metaEl = document.getElementById("meta");
@@ -275,11 +337,12 @@
     const audioPlayerEl = document.getElementById("audioPlayer");
 
     let traces = [];
+    let audioTracks = [];
     let currentTrace = null;
     let recentTraceIds = [];
+    let currentAudioUrl = null;
     let revealTimeout = null;
     let nextButtonTimeout = null;
-    let currentAudioUrl = null;
 
     function setState(msg = "") {
       stateEl.textContent = msg;
@@ -289,35 +352,27 @@
       return Math.random() * (max - min) + min;
     }
 
-    function chooseRandomAudio(excludeUrl = null) {
-      if (!AUDIO_TRACKS.length) return null;
-      let candidates = AUDIO_TRACKS.filter(url => url !== excludeUrl);
-      if (!candidates.length) candidates = [...AUDIO_TRACKS];
-      return candidates[Math.floor(Math.random() * candidates.length)];
+    function updateRecent(id) {
+      recentTraceIds.unshift(id);
+      recentTraceIds = recentTraceIds.slice(0, 3);
     }
 
     function chooseNextTrace() {
       if (!traces.length) return null;
 
       let candidates = traces.filter(t => !recentTraceIds.includes(t.id));
-      if (!candidates.length) {
-        candidates = [...traces];
-      }
+      if (!candidates.length) candidates = [...traces];
 
-      const picked = candidates[Math.floor(Math.random() * candidates.length)];
-      return picked;
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
-    function updateRecent(id) {
-      recentTraceIds.unshift(id);
-      recentTraceIds = recentTraceIds.slice(0, 3);
-    }
+    function chooseRandomAudio(excludeUrl = null) {
+      if (!audioTracks.length) return null;
 
-    function placeSpot() {
-      const x = randomBetween(14, 86);
-      const y = randomBetween(18, 82);
-      spotEl.style.left = `${x}%`;
-      spotEl.style.top = `${y}%`;
+      let candidates = audioTracks.filter(url => url !== excludeUrl);
+      if (!candidates.length) candidates = [...audioTracks];
+
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
     function clearTimers() {
@@ -337,18 +392,59 @@
       audioPlayerEl.currentTime = 0;
     }
 
+    function setImageSources(url) {
+      bgLayerEl.style.backgroundImage = `url("${url}")`;
+      bgBlurLayerEl.style.backgroundImage = `url("${url}")`;
+      mainImageEl.src = url;
+      mainImageBlurEl.src = url;
+    }
+
+    function placeSpotInsideImage() {
+      const sceneRect = sceneEl.getBoundingClientRect();
+      const imageRect = mainImageEl.getBoundingClientRect();
+
+      if (
+        imageRect.width < 40 ||
+        imageRect.height < 40 ||
+        sceneRect.width < 40 ||
+        sceneRect.height < 40
+      ) {
+        const x = randomBetween(14, 86);
+        const y = randomBetween(16, 84);
+        spotEl.style.left = `${x}%`;
+        spotEl.style.top = `${y}%`;
+        return;
+      }
+
+      const margin = 28;
+
+      const minX = Math.max(imageRect.left - sceneRect.left + margin, margin);
+      const maxX = Math.min(imageRect.right - sceneRect.left - margin, sceneRect.width - margin);
+
+      const minY = Math.max(imageRect.top - sceneRect.top + margin, margin);
+      const maxY = Math.min(imageRect.bottom - sceneRect.top - margin, sceneRect.height - margin);
+
+      const x = randomBetween(minX, maxX);
+      const y = randomBetween(minY, maxY);
+
+      spotEl.style.left = `${x}px`;
+      spotEl.style.top = `${y}px`;
+    }
+
     function renderTrace(trace) {
       currentTrace = trace;
       updateRecent(trace.id);
+      setImageSources(trace.imageUrl);
 
-      imageLayerEl.style.backgroundImage = `url("${trace.imageUrl}")`;
-      blurLayerEl.style.backgroundImage = `url("${trace.imageUrl}")`;
+      mainImageEl.alt = trace.imageTitle
+        ? `Trace image: ${trace.imageTitle}`
+        : "Trace image";
 
       counterEl.textContent = `${traces.length} curated traces`;
       resetScene();
 
       revealTimeout = setTimeout(() => {
-        placeSpot();
+        placeSpotInsideImage();
         spotEl.classList.add("active");
         setState("Touch the trace.");
       }, 1200);
@@ -392,6 +488,24 @@
       renderTrace(next);
     }
 
+    function extractAudioUrl(data) {
+      return data.audioUrl || null;
+    }
+
+    async function loadAudioTracks() {
+      try {
+        const snap = await getDocs(collection(db, "audio_observations"));
+        audioTracks = snap.docs
+          .map(docSnap => extractAudioUrl(docSnap.data()))
+          .filter(Boolean);
+
+        console.log("Loaded audio tracks:", audioTracks.length);
+      } catch (err) {
+        console.error("Failed to load audio observations:", err);
+        audioTracks = [];
+      }
+    }
+
     async function loadCuratedPublishedTraces() {
       try {
         setState("Loading traces…");
@@ -425,7 +539,14 @@
     spotEl.addEventListener("click", revealTrace);
     nextBtnEl.addEventListener("click", showAnotherTrace);
 
-    loadCuratedPublishedTraces();
+    window.addEventListener("resize", () => {
+      if (currentTrace && spotEl.classList.contains("active")) {
+        placeSpotInsideImage();
+      }
+    });
+
+    await loadAudioTracks();
+    await loadCuratedPublishedTraces();
   </script>
 </body>
 </html>
