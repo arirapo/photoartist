@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trace</title>
+  <style>
+    :root {
+      --bg: #111;
+      --panel: #171717;
+      --text: #f2f2f2;
+      --muted: #a8a8a8;
+      --line: #333;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      width: min(820px, 92vw);
+      margin: 48px auto 72px;
+    }
+
+    h1 {
+      margin: 0 0 0.4em;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .meta {
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .image-wrap {
+      background: #0d0d0d;
+    }
+
+    .image-wrap img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .content {
+      padding: 1.2rem 1.2rem 1.4rem;
+    }
+
+    .sentence {
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      line-height: 1.5;
+      margin: 0 0 1rem;
+      white-space: pre-wrap;
+    }
+
+    .name {
+      color: var(--muted);
+      margin: 0.2rem 0 0;
+    }
+
+    .image-title {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.45rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .state,
+    .error {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      color: var(--muted);
+    }
+
+    .error {
+      color: #ffb3b3;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 1.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .back:hover {
+      border-color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Trace</h1>
+    <div class="meta" id="meta">Loading trace…</div>
+
+    <div id="loading" class="state">Loading…</div>
+    <div id="error" class="error" style="display:none;"></div>
+
+    <article id="traceCard" class="card" style="display:none;">
+      <div class="image-wrap">
+        <img id="traceImage" alt="Trace image" />
+      </div>
+
+      <div class="content">
+        <div id="imageTitle" class="image-title" style="display:none;"></div>
+        <p id="sentence" class="sentence"></p>
+        <p id="name" class="name"></p>
+        <div id="curatedBadge" class="badge" style="display:none;">Curated to collection</div>
+      </div>
+    </article>
+
+    <a class="back" href="/traces/submit/">Submit another trace</a>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      limit,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+      authDomain: "photodiarygame.firebaseapp.com",
+      projectId: "photodiarygame",
+      storageBucket: "photodiarygame.firebasestorage.app",
+      messagingSenderId: "745003978989",
+      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+      measurementId: "G-1T7CBFRP55"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const metaEl = document.getElementById("meta");
+    const loadingEl = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+    const traceCardEl = document.getElementById("traceCard");
+
+    const traceImageEl = document.getElementById("traceImage");
+    const imageTitleEl = document.getElementById("imageTitle");
+    const sentenceEl = document.getElementById("sentence");
+    const nameEl = document.getElementById("name");
+    const curatedBadgeEl = document.getElementById("curatedBadge");
+
+    function showError(message) {
+      loadingEl.style.display = "none";
+      traceCardEl.style.display = "none";
+      errorEl.style.display = "block";
+      errorEl.textContent = message;
+      metaEl.textContent = "Trace unavailable";
+      document.title = "Trace unavailable";
+    }
+
+    async function loadTrace() {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get("slug");
+
+      if (!slug) {
+        showError("No trace slug was provided.");
+        return;
+      }
+
+      try {
+        const q = query(
+          collection(db, "traces_submissions"),
+          where("slug", "==", slug),
+          limit(1)
+        );
+
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          showError("This trace could not be found.");
+          return;
+        }
+
+        const docSnap = snapshot.docs[0];
+        const data = docSnap.data();
+
+        traceImageEl.src = data.imageUrl || "";
+        traceImageEl.alt = data.imageTitle
+          ? `Trace image: ${data.imageTitle}`
+          : "Trace image";
+
+        sentenceEl.textContent = data.sentence || "";
+        nameEl.textContent = data.participantName ? `— ${data.participantName}` : "";
+
+        if (data.imageTitle && data.imageTitle.trim() !== "") {
+          imageTitleEl.textContent = data.imageTitle;
+          imageTitleEl.style.display = "block";
+          document.title = data.imageTitle;
+          metaEl.textContent = "Personal trace";
+        } else {
+          imageTitleEl.style.display = "none";
+          document.title = "Trace";
+          metaEl.textContent = "Personal trace";
+        }
+
+        if (data.isCurated === true) {
+          curatedBadgeEl.style.display = "inline-block";
+        }
+
+        loadingEl.style.display = "none";
+        errorEl.style.display = "none";
+        traceCardEl.style.display = "block";
+      } catch (err) {
+        console.error(err);
+        showError("An error occurred while loading the trace.");
+      }
+    }
+
+    loadTrace();
+  </script>
+</body>
+</html>
