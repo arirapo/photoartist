@@ -56,44 +56,10 @@
       border: 1px solid var(--line);
     }
 
-    .bg-layer,
-    .bg-blur-layer {
-      position: absolute;
-      inset: 0;
-      background-position: center center;
-      background-repeat: no-repeat;
-      background-size: cover;
-      transition: opacity 900ms ease, filter 900ms ease, transform 1200ms ease;
-    }
-
-    .bg-layer {
-      opacity: 0.42;
-      filter: blur(0px);
-      transform: scale(1.02);
-      z-index: 1;
-    }
-
-    .bg-blur-layer {
-      opacity: 0;
-      filter: blur(28px);
-      transform: scale(1.08);
-      z-index: 2;
-    }
-
-    .scene.revealed .bg-blur-layer {
-      opacity: 0.9;
-    }
-
-    .scene.revealed .bg-layer {
-      opacity: 0.18;
-      filter: blur(8px);
-      transform: scale(1.04);
-    }
-
     .image-stage {
       position: absolute;
       inset: 0;
-      z-index: 3;
+      z-index: 1;
       display: grid;
       place-items: center;
       padding: clamp(16px, 3vw, 36px);
@@ -164,7 +130,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 1200ms ease;
-      z-index: 6;
+      z-index: 3;
       touch-action: manipulation;
       cursor: pointer;
       border: 0;
@@ -178,7 +144,7 @@
     .overlay {
       position: absolute;
       inset: 0;
-      z-index: 7;
+      z-index: 4;
       display: grid;
       place-items: center;
       pointer-events: none;
@@ -271,9 +237,6 @@
     </div>
 
     <section id="scene" class="scene" aria-label="Traces experience">
-      <div id="bgLayer" class="bg-layer"></div>
-      <div id="bgBlurLayer" class="bg-blur-layer"></div>
-
       <div class="image-stage">
         <div class="image-frame">
           <img id="mainImage" class="main-image" alt="Trace image" />
@@ -324,8 +287,6 @@
     const db = getFirestore(app);
 
     const sceneEl = document.getElementById("scene");
-    const bgLayerEl = document.getElementById("bgLayer");
-    const bgBlurLayerEl = document.getElementById("bgBlurLayer");
     const mainImageEl = document.getElementById("mainImage");
     const mainImageBlurEl = document.getElementById("mainImageBlur");
     const spotEl = document.getElementById("spot");
@@ -359,19 +320,15 @@
 
     function chooseNextTrace() {
       if (!traces.length) return null;
-
       let candidates = traces.filter(t => !recentTraceIds.includes(t.id));
       if (!candidates.length) candidates = [...traces];
-
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
     function chooseRandomAudio(excludeUrl = null) {
       if (!audioTracks.length) return null;
-
       let candidates = audioTracks.filter(url => url !== excludeUrl);
       if (!candidates.length) candidates = [...audioTracks];
-
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
@@ -393,8 +350,6 @@
     }
 
     function setImageSources(url) {
-      bgLayerEl.style.backgroundImage = `url("${url}")`;
-      bgBlurLayerEl.style.backgroundImage = `url("${url}")`;
       mainImageEl.src = url;
       mainImageBlurEl.src = url;
     }
