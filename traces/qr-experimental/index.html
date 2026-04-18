@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traces — QR Field</title>
+  <style>
+    :root {
+      --bg: #111;
+      --cell-bg: #171717;
+      --line: rgba(255,255,255,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+    }
+
+    .wrap {
+      width: min(1440px, 94vw);
+      margin: 42px auto 60px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .item {
+      min-height: 220px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: var(--cell-bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .item::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--accent, #333);
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    .item::after {
+      content: "";
+      position: absolute;
+      inset: -10%;
+      background: radial-gradient(circle, var(--accent, #333) 0%, transparent 70%);
+      opacity: 0.22;
+      filter: blur(24px);
+      pointer-events: none;
+      transform: scale(1.04);
+    }
+
+    .qr-box {
+      position: relative;
+      z-index: 2;
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 0 24px rgba(0,0,0,0.22);
+      display: grid;
+      place-items: center;
+    }
+
+    .qr-box canvas,
+    .qr-box img {
+      display: block;
+      width: 180px;
+      height: 180px;
+    }
+
+    .state {
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      padding: 2rem 1rem;
+      min-height: 2rem;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 14px;
+      }
+
+      .item {
+        min-height: 180px;
+        padding: 12px;
+      }
+
+      .qr-box {
+        padding: 10px;
+      }
+
+      .qr-box canvas,
+      .qr-box img {
+        width: 140px;
+        height: 140px;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .wrap {
+        width: 100%;
+        margin: 0;
+        padding: 12mm;
+      }
+
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10mm;
+      }
+
+      .item {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+      }
+
+      .state {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div id="state" class="state">Loading…</div>
+    <section id="grid" class="grid"></section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+      authDomain: "photodiarygame.firebaseapp.com",
+      projectId: "photodiarygame",
+      storageBucket: "photodiarygame.firebasestorage.app",
+      messagingSenderId: "745003978989",
+      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+      measurementId: "G-1T7CBFRP55"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const gridEl = document.getElementById("grid");
+    const stateEl = document.getElementById("state");
+
+    function setState(msg = "") {
+      stateEl.textContent = msg;
+      stateEl.style.display = msg ? "block" : "none";
+    }
+
+    function buildTraceUrl(slug) {
+      return `${window.location.origin}/traces/t/index.html?slug=${encodeURIComponent(slug || "")}`;
+    }
+
+    function randomHexColor() {
+      const n = Math.floor(Math.random() * 0xffffff);
+      return `#${n.toString(16).padStart(6, "0")}`;
+    }
+
+    async function loadQrField() {
+      try {
+        setState("Loading…");
+
+        const q = query(
+          collection(db, "traces_submissions"),
+          where("isCurated", "==", true),
+          where("isPublished", "==", true)
+        );
+
+        const snap = await getDocs(q);
+
+        const items = snap.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }));
+
+        if (!items.length) {
+          gridEl.innerHTML = "";
+          setState("No curated traces.");
+          return;
+        }
+
+        gridEl.innerHTML = items.map((item, index) => {
+          const color = randomHexColor();
+          return `
+            <div class="item" id="item-${index}" style="--accent:${color};">
+              <div class="qr-box" id="qr-${index}"></div>
+            </div>
+          `;
+        }).join("");
+
+        items.forEach((item, index) => {
+          const target = document.getElementById(`qr-${index}`);
+          if (!target || !item.slug) return;
+
+          const qrUrl = buildTraceUrl(item.slug);
+
+          new QRCode(target, {
+            text: qrUrl,
+            width: 180,
+            height: 180,
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        });
+
+        setState("");
+      } catch (err) {
+        console.error(err);
+        gridEl.innerHTML = "";
+        setState("Failed to load.");
+      }
+    }
+
+    await loadQrField();
+  </script>
+</body>
+</html>
