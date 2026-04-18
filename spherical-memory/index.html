@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spherical Memory</title>
+  <style>
+    :root {
+      --bg: #111;
+      --text: #f2f2f2;
+      --muted: rgba(255,255,255,0.6);
+      --line: rgba(255,255,255,0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .app {
+      width: min(96vw, 1400px);
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .title {
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      min-height: 76vh;
+      border: 1px solid var(--line);
+      background: #000;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 76vh;
+    }
+
+    .overlay {
+      position: absolute;
+      left: 18px;
+      bottom: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      background: rgba(0,0,0,0.22);
+      padding: 8px 10px;
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+    }
+
+    .controls {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #1b1b1b;
+      color: var(--text);
+      padding: 0.8rem 1rem;
+      border-radius: 999px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: rgba(255,255,255,0.25);
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="title">Spherical Memory</div>
+      <div id="status">Loading image list…</div>
+    </div>
+
+    <section class="stage">
+      <canvas id="canvas"></canvas>
+
+      <div class="overlay">
+        <span id="frameInfo">Frame 0 / 0</span>
+        <span id="loadInfo">Loaded 0</span>
+        <span id="modeInfo">Mode: loop</span>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button id="playPauseBtn" type="button">Pause</button>
+      <button id="shuffleBtn" type="button">Shuffle order</button>
+      <button id="restartBtn" type="button">Restart</button>
+    </div>
+  </main>
+
+  <script>
+    const JSON_URL = "data/images.json";
+
+    const PRELOAD_INITIAL = 12;
+    const PRELOAD_BATCH = 8;
+    const MAX_CONCURRENT_LOADS = 6;
+
+    const FPS = 12;
+    const FRAME_DURATION = 1000 / FPS;
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d", { alpha: false });
+
+    const statusEl = document.getElementById("status");
+    const frameInfoEl = document.getElementById("frameInfo");
+    const loadInfoEl = document.getElementById("loadInfo");
+    const modeInfoEl = document.getElementById("modeInfo");
+
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const shuffleBtn = document.getElementById("shuffleBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    let imagePaths = [];
+    let playOrder = [];
+    let loadedImages = new Map();
+    let failedImages = new Set();
+    let loadingSet = new Set();
+
+    let currentFrame = 0;
+    let lastFrameTime = 0;
+    let isPlaying = true;
+    let hasStarted = false;
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function updateInfo() {
+      frameInfoEl.textContent = `Frame ${Math.min(currentFrame + 1, playOrder.length || 0)} / ${playOrder.length}`;
+      loadInfoEl.textContent = `Loaded ${loadedImages.size} / ${imagePaths.length}`;
+      modeInfoEl.textContent = `Mode: ${isPlaying ? "loop" : "paused"}`;
+    }
+
+    function resizeCanvas() {
+      const stage = canvas.parentElement;
+      const maxW = stage.clientWidth;
+      const maxH = stage.clientHeight;
+
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(maxW * dpr);
+      canvas.height = Math.floor(maxH * dpr);
+      canvas.style.width = `${maxW}px`;
+      canvas.style.height = `${maxH}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawCurrentFrame();
+    }
+
+    function buildInitialOrder() {
+      playOrder = imagePaths.map((_, i) => i);
+    }
+
+    function shuffleOrder() {
+      for (let i = playOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [playOrder[i], playOrder[j]] = [playOrder[j], playOrder[i]];
+      }
+      currentFrame = 0;
+      drawCurrentFrame();
+      updateInfo();
+    }
+
+    function loadImageAtIndex(index) {
+      if (
+        index < 0 ||
+        index >= imagePaths.length ||
+        loadedImages.has(index) ||
+        failedImages.has(index) ||
+        loadingSet.has(index)
+      ) {
+        return Promise.resolve();
+      }
+
+      loadingSet.add(index);
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.onload = () => {
+          loadedImages.set(index, img);
+          loadingSet.delete(index);
+          updateInfo();
+          resolve();
+        };
+        img.onerror = () => {
+          failedImages.add(index);
+          loadingSet.delete(index);
+          resolve();
+        };
+        img.src = imagePaths[index];
+      });
+    }
+
+    async function preloadRange(start, count) {
+      const end = Math.min(start + count, imagePaths.length);
+      let cursor = start;
+
+      while (cursor < end) {
+        const chunk = [];
+        for (let i = 0; i < MAX_CONCURRENT_LOADS && cursor < end; i++, cursor++) {
+          chunk.push(loadImageAtIndex(cursor));
+        }
+        await Promise.all(chunk);
+      }
+    }
+
+    async function startLoadingPipeline() {
+      await preloadRange(0, PRELOAD_INITIAL);
+
+      if (loadedImages.size > 0) {
+        hasStarted = true;
+        setStatus("Playing");
+        drawCurrentFrame();
+      } else {
+        setStatus("No images loaded.");
+        return;
+      }
+
+      let nextIndex = PRELOAD_INITIAL;
+      while (nextIndex < imagePaths.length) {
+        await preloadRange(nextIndex, PRELOAD_BATCH);
+        nextIndex += PRELOAD_BATCH;
+      }
+
+      setStatus("All images loaded");
+    }
+
+    function getCurrentImage() {
+      if (!playOrder.length) return null;
+
+      let attempts = 0;
+      while (attempts < playOrder.length) {
+        const realIndex = playOrder[currentFrame];
+        const img = loadedImages.get(realIndex);
+        if (img) return img;
+
+        currentFrame = (currentFrame + 1) % playOrder.length;
+        attempts++;
+      }
+
+      return null;
+    }
+
+    function drawImageContained(img) {
+      const cw = canvas.clientWidth;
+      const ch = canvas.clientHeight;
+
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, cw, ch);
+
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      if (!iw || !ih) return;
+
+      const scale = Math.min(cw / iw, ch / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = (cw - dw) / 2;
+      const dy = (ch - dh) / 2;
+
+      ctx.drawImage(img, dx, dy, dw, dh);
+    }
+
+    function drawCurrentFrame() {
+      const img = getCurrentImage();
+      if (!img) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, cw, ch);
+        return;
+      }
+      drawImageContained(img);
+    }
+
+    function stepFrame(timestamp) {
+      if (!hasStarted) {
+        requestAnimationFrame(stepFrame);
+        return;
+      }
+
+      if (!lastFrameTime) {
+        lastFrameTime = timestamp;
+      }
+
+      if (isPlaying && timestamp - lastFrameTime >= FRAME_DURATION) {
+        currentFrame = (currentFrame + 1) % playOrder.length;
+        drawCurrentFrame();
+        updateInfo();
+        lastFrameTime = timestamp;
+      }
+
+      requestAnimationFrame(stepFrame);
+    }
+
+    async function init() {
+      try {
+        setStatus("Loading image list…");
+        const response = await fetch(JSON_URL);
+        if (!response.ok) {
+          throw new Error("Failed to load images.json");
+        }
+
+        imagePaths = await response.json();
+        if (!Array.isArray(imagePaths) || imagePaths.length === 0) {
+          throw new Error("Image list is empty or invalid.");
+        }
+
+        buildInitialOrder();
+        updateInfo();
+        resizeCanvas();
+
+        setStatus("Preloading…");
+        startLoadingPipeline();
+        requestAnimationFrame(stepFrame);
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || "Initialization failed");
+      }
+    }
+
+    playPauseBtn.addEventListener("click", () => {
+      isPlaying = !isPlaying;
+      playPauseBtn.textContent = isPlaying ? "Pause" : "Play";
+      updateInfo();
+      if (isPlaying) setStatus("Playing");
+      else setStatus("Paused");
+    });
+
+    shuffleBtn.addEventListener("click", () => {
+      shuffleOrder();
+      setStatus("Order shuffled");
+    });
+
+    restartBtn.addEventListener("click", () => {
+      currentFrame = 0;
+      drawCurrentFrame();
+      updateInfo();
+      setStatus("Restarted");
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+
+    init();
+  </script>
+</body>
+</html>
