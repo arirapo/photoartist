@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traces — Gallery</title>
+  <style>
+    :root {
+      --bg: #111;
+      --panel: #171717;
+      --text: #f2f2f2;
+      --muted: #a8a8a8;
+      --line: rgba(255,255,255,0.12);
+      --gap: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .wrap {
+      width: min(1400px, 94vw);
+      margin: 42px auto 60px;
+    }
+
+    h1 {
+      margin: 0 0 0.35em;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .intro {
+      margin: 0 0 1.8rem;
+      color: var(--muted);
+      max-width: 72ch;
+      line-height: 1.55;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+    }
+
+    .controls label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .controls input,
+    .controls select {
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #101010;
+      color: var(--text);
+      padding: 0.75rem 0.85rem;
+      min-width: 220px;
+    }
+
+    .state {
+      min-height: 1.4rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: var(--gap);
+    }
+
+    .item {
+      display: grid;
+      gap: 0.75rem;
+      align-content: start;
+    }
+
+    .thumb-btn {
+      appearance: none;
+      display: block;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #000;
+      padding: 14px;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: border-color 220ms ease, transform 220ms ease;
+    }
+
+    .thumb-btn:hover {
+      border-color: rgba(255,255,255,0.24);
+      transform: translateY(-1px);
+    }
+
+    .thumb-frame {
+      display: grid;
+      place-items: center;
+      background: #000;
+      min-height: 240px;
+    }
+
+    .thumb-frame img {
+      display: block;
+      max-width: 100%;
+      max-height: 420px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .meta {
+      display: grid;
+      gap: 0.18rem;
+      padding: 0 0.15rem;
+    }
+
+    .name {
+      font-size: 0.98rem;
+      line-height: 1.35;
+    }
+
+    .title {
+      font-size: 0.86rem;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+
+    .slug {
+      font-size: 0.8rem;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    .empty {
+      padding: 1rem 1.1rem;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      color: var(--muted);
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: none;
+      z-index: 1000;
+      padding: 24px;
+    }
+
+    .lightbox.open {
+      display: grid;
+      place-items: center;
+    }
+
+    .lightbox-inner {
+      width: min(1200px, 96vw);
+      max-height: 92vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+    }
+
+    .lightbox-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      color: var(--muted);
+    }
+
+    .close-btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 0.7rem 0.95rem;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .lightbox-figure {
+      margin: 0;
+      display: grid;
+      place-items: center;
+      background: #000;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      min-height: 40vh;
+    }
+
+    .lightbox-figure img {
+      display: block;
+      max-width: 100%;
+      max-height: 68vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .lightbox-caption {
+      display: grid;
+      gap: 0.45rem;
+      text-align: center;
+    }
+
+    .lightbox-title {
+      font-size: 0.95rem;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+
+    .lightbox-sentence {
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .lightbox-name {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .lightbox-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.35rem;
+    }
+
+    .lightbox-links a {
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .lightbox-links a:hover {
+      border-color: var(--text);
+    }
+
+    @media (max-width: 700px) {
+      .lightbox {
+        padding: 14px;
+      }
+
+      .lightbox-figure {
+        padding: 14px;
+      }
+
+      .thumb-frame {
+        min-height: 200px;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: black;
+      }
+
+      .wrap {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .controls,
+      .state,
+      .intro,
+      .lightbox {
+        display: none !important;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12mm;
+      }
+
+      .thumb-btn {
+        border: 1px solid #ccc;
+        background: white;
+      }
+
+      .meta,
+      .name,
+      .title,
+      .slug {
+        color: black;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Traces — Gallery</h1>
+    <p class="intro">
+      A minimalist gallery of curated traces. Click an image to view it larger together with its sentence.
+    </p>
+
+    <div class="topbar">
+      <div>Curated and published traces</div>
+      <div id="counter">Loading…</div>
+    </div>
+
+    <section class="controls">
+      <div>
+        <label for="searchInput">Search</label>
+        <input id="searchInput" type="text" placeholder="Name, title, sentence, slug…" />
+      </div>
+
+      <div>
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="name">Name</option>
+          <option value="title">Image title</option>
+        </select>
+      </div>
+    </section>
+
+    <div id="state" class="state"></div>
+    <section id="grid" class="grid"></section>
+  </main>
+
+  <div id="lightbox" class="lightbox" aria-hidden="true">
+    <div class="lightbox-inner">
+      <div class="lightbox-topbar">
+        <div id="lightboxCounter">Trace</div>
+        <button id="closeBtn" class="close-btn" type="button">Close</button>
+      </div>
+
+      <figure class="lightbox-figure">
+        <img id="lightboxImage" alt="Trace image" />
+      </figure>
+
+      <div class="lightbox-caption">
+        <div id="lightboxTitle" class="lightbox-title" style="display:none;"></div>
+        <div id="lightboxSentence" class="lightbox-sentence"></div>
+        <div id="lightboxName" class="lightbox-name"></div>
+        <div class="lightbox-links">
+          <a id="lightboxTraceLink" href="#" target="_blank" rel="noopener">Open personal trace</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+      authDomain: "photodiarygame.firebaseapp.com",
+      projectId: "photodiarygame",
+      storageBucket: "photodiarygame.firebasestorage.app",
+      messagingSenderId: "745003978989",
+      appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+      measurementId: "G-1T7CBFRP55"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const gridEl = document.getElementById("grid");
+    const stateEl = document.getElementById("state");
+    const counterEl = document.getElementById("counter");
+    const searchInputEl = document.getElementById("searchInput");
+    const sortSelectEl = document.getElementById("sortSelect");
+
+    const lightboxEl = document.getElementById("lightbox");
+    const closeBtnEl = document.getElementById("closeBtn");
+    const lightboxCounterEl = document.getElementById("lightboxCounter");
+    const lightboxImageEl = document.getElementById("lightboxImage");
+    const lightboxTitleEl = document.getElementById("lightboxTitle");
+    const lightboxSentenceEl = document.getElementById("lightboxSentence");
+    const lightboxNameEl = document.getElementById("lightboxName");
+    const lightboxTraceLinkEl = document.getElementById("lightboxTraceLink");
+
+    let allItems = [];
+    let filtered = [];
+    let currentIndex = -1;
+
+    function setState(msg = "") {
+      stateEl.textContent = msg;
+    }
+
+    function formatDate(value) {
+      if (!value) return 0;
+      if (typeof value.toDate === "function") return value.toDate().getTime();
+      try {
+        return new Date(value).getTime();
+      } catch {
+        return 0;
+      }
+    }
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function buildTraceUrl(slug) {
+      return `${window.location.origin}/traces/t/index.html?slug=${encodeURIComponent(slug || "")}`;
+    }
+
+    function getFilteredItems() {
+      const search = searchInputEl.value.trim().toLowerCase();
+      const sort = sortSelectEl.value;
+
+      let items = [...allItems];
+
+      if (search) {
+        items = items.filter(item => {
+          const blob = [
+            item.participantName || "",
+            item.imageTitle || "",
+            item.sentence || "",
+            item.slug || ""
+          ].join(" ").toLowerCase();
+          return blob.includes(search);
+        });
+      }
+
+      if (sort === "oldest") {
+        items.sort((a, b) => formatDate(a.createdAt) - formatDate(b.createdAt));
+      } else if (sort === "name") {
+        items.sort((a, b) => (a.participantName || "").localeCompare(b.participantName || ""));
+      } else if (sort === "title") {
+        items.sort((a, b) => (a.imageTitle || "").localeCompare(b.imageTitle || ""));
+      } else {
+        items.sort((a, b) => formatDate(b.createdAt) - formatDate(a.createdAt));
+      }
+
+      return items;
+    }
+
+    function renderGallery() {
+      filtered = getFilteredItems();
+      counterEl.textContent = `${filtered.length} traces`;
+
+      if (!filtered.length) {
+        gridEl.innerHTML = `<div class="empty">No curated traces match the current view.</div>`;
+        return;
+      }
+
+      gridEl.innerHTML = filtered.map((item, index) => `
+        <article class="item">
+          <button class="thumb-btn" type="button" data-index="${index}">
+            <div class="thumb-frame">
+              <img
+                src="${escapeHtml(item.imageUrl || "")}"
+                alt="${escapeHtml(item.imageTitle || item.participantName || "Trace image")}"
+                loading="lazy"
+              />
+            </div>
+          </button>
+
+          <div class="meta">
+            <div class="name">${escapeHtml(item.participantName || "Untitled trace")}</div>
+            ${item.imageTitle ? `<div class="title">${escapeHtml(item.imageTitle)}</div>` : ``}
+            <div class="slug">${escapeHtml(item.slug || "")}</div>
+          </div>
+        </article>
+      `).join("");
+
+      gridEl.querySelectorAll(".thumb-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const index = Number(btn.dataset.index);
+          openLightbox(index);
+        });
+      });
+    }
+
+    function openLightbox(index) {
+      const item = filtered[index];
+      if (!item) return;
+
+      currentIndex = index;
+
+      lightboxCounterEl.textContent = `Trace ${index + 1} / ${filtered.length}`;
+      lightboxImageEl.src = item.imageUrl || "";
+      lightboxImageEl.alt = item.imageTitle || item.participantName || "Trace image";
+
+      if (item.imageTitle && item.imageTitle.trim() !== "") {
+        lightboxTitleEl.textContent = item.imageTitle;
+        lightboxTitleEl.style.display = "block";
+      } else {
+        lightboxTitleEl.textContent = "";
+        lightboxTitleEl.style.display = "none";
+      }
+
+      lightboxSentenceEl.textContent = item.sentence || "";
+      lightboxNameEl.textContent = item.participantName ? `— ${item.participantName}` : "";
+      lightboxTraceLinkEl.href = buildTraceUrl(item.slug);
+
+      lightboxEl.classList.add("open");
+      lightboxEl.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+      lightboxEl.classList.remove("open");
+      lightboxEl.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    async function loadGallery() {
+      try {
+        setState("Loading gallery…");
+
+        const q = query(
+          collection(db, "traces_submissions"),
+          where("isCurated", "==", true),
+          where("isPublished", "==", true)
+        );
+
+        const snap = await getDocs(q);
+
+        allItems = snap.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }));
+
+        setState("");
+        renderGallery();
+      } catch (err) {
+        console.error(err);
+        setState("Failed to load gallery.");
+        counterEl.textContent = "Error";
+      }
+    }
+
+    searchInputEl.addEventListener("input", renderGallery);
+    sortSelectEl.addEventListener("change", renderGallery);
+    closeBtnEl.addEventListener("click", closeLightbox);
+
+    lightboxEl.addEventListener("click", (e) => {
+      if (e.target === lightboxEl) {
+        closeLightbox();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (!lightboxEl.classList.contains("open")) return;
+
+      if (e.key === "Escape") {
+        closeLightbox();
+      } else if (e.key === "ArrowRight") {
+        if (currentIndex < filtered.length - 1) openLightbox(currentIndex + 1);
+      } else if (e.key === "ArrowLeft") {
+        if (currentIndex > 0) openLightbox(currentIndex - 1);
+      }
+    });
+
+    await loadGallery();
+  </script>
+</body>
+</html>
