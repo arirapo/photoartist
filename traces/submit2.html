@@ -280,7 +280,7 @@
     const qrCodeEl = document.getElementById("qrCode");
     const downloadQrEl = document.getElementById("downloadQr");
 
-    const TRACE_BASE_URL = `${window.location.origin}/traces/t/`;
+    const TRACE_BASE_URL = `${window.location.origin}/traces/t/index.html?slug=`;
 
     function setStatus(msg = "") {
       statusEl.textContent = msg;
@@ -409,7 +409,7 @@
         });
 
         const imageUrl = await getDownloadURL(storageRef);
-        const qrUrl = `${TRACE_BASE_URL}${slug}/`;
+       const qrUrl = `${TRACE_BASE_URL}${encodeURIComponent(slug)}`;
 
         const docRef = doc(collection(db, "traces_submissions"));
 
