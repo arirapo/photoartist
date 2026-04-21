@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fragments</title>
+  <meta name="description" content="A space for image, text, sound, and traces." />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body data-page="index">
+  <header class="site-header">
+    <div class="header-inner">
+      <div>
+        <p class="eyebrow">memory-fragments</p>
+        <h1>Fragments</h1>
+        <p class="intro">A place for image, text, sound, and traces.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="controls">
+      <div class="control-group">
+        <label for="searchInput">Search</label>
+        <input id="searchInput" type="search" placeholder="Search fragments..." />
+      </div>
+
+      <div class="control-group">
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect">
+          <option value="date-desc">Newest first</option>
+          <option value="date-asc">Oldest first</option>
+        </select>
+      </div>
+
+      <div class="control-group tags-group">
+        <span class="label-like">Tags</span>
+        <div id="tagFilters" class="tag-filters"></div>
+      </div>
+    </section>
+
+    <section class="results-meta">
+      <p id="resultsCount">Loading…</p>
+    </section>
+
+    <section id="fragmentsList" class="fragments-list"></section>
+  </main>
+
+  <footer class="site-footer">
+    <p>memory-fragments</p>
+  </footer>
+
+  <script type="module" src="./js/fragments.js"></script>
+</body>
+</html>
