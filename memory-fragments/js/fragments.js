@@ -2,7 +2,6 @@ import { db } from "./firebase-init.js";
 import {
   collection,
   getDocs,
-  orderBy,
   query,
   where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -24,8 +23,7 @@ async function init() {
   try {
     const q = query(
       collection(db, "fragments"),
-      where("status", "==", "published"),
-      orderBy("date", "desc")
+      where("status", "==", "published")
     );
 
     const snapshot = await getDocs(q);
