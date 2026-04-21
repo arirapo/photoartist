@@ -11,12 +11,13 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-
   Replace these values with your own Firebase project config.
 */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+  authDomain: "photodiarygame.firebaseapp.com",
+  projectId: "photodiarygame",
+  storageBucket: "photodiarygame.firebasestorage.app",
+  messagingSenderId: "745003978989",
+  appId: "1:745003978989:web:727489ba72b34d77af3ce4",
+  measurementId: "G-1T7CBFRP55"
 };
 
 const app = initializeApp(firebaseConfig);
