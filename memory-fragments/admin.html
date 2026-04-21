@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fragments Admin</title>
+  <link rel="stylesheet" href="./css/admin.css" />
+</head>
+<body>
+  <header class="admin-header">
+    <div>
+      <p class="eyebrow">memory-fragments</p>
+      <h1>Admin</h1>
+    </div>
+    <div class="admin-header-actions">
+      <button id="logoutBtn" class="ghost-btn" type="button" hidden>Log out</button>
+    </div>
+  </header>
+
+  <main class="admin-page">
+    <section id="authSection" class="panel auth-panel">
+      <h2>Sign in</h2>
+      <p class="muted">Admin access only.</p>
+
+      <form id="loginForm" class="stack-form">
+        <label>
+          <span>Email</span>
+          <input id="emailInput" type="email" required />
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input id="passwordInput" type="password" required />
+        </label>
+
+        <button type="submit">Sign in</button>
+      </form>
+
+      <p id="authMessage" class="message"></p>
+    </section>
+
+    <section id="adminSection" class="panel" hidden>
+      <div class="panel-top">
+        <div>
+          <h2>New fragment</h2>
+          <p class="muted">Build a fragment with text, image, audio, and video blocks.</p>
+        </div>
+      </div>
+
+      <form id="fragmentForm" class="stack-form">
+        <div class="grid-2">
+          <label>
+            <span>Title</span>
+            <input id="titleInput" type="text" placeholder="Optional title" />
+          </label>
+
+          <label>
+            <span>Slug</span>
+            <input id="slugInput" type="text" placeholder="auto-generated-if-empty" />
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <label>
+            <span>Date</span>
+            <input id="dateInput" type="date" required />
+          </label>
+
+          <label>
+            <span>Status</span>
+            <select id="statusInput">
+              <option value="draft">draft</option>
+              <option value="published">published</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span>Tags</span>
+          <input id="tagsInput" type="text" placeholder="memory, trace, sound" />
+        </label>
+
+        <label>
+          <span>Excerpt</span>
+          <textarea id="excerptInput" rows="3" placeholder="Short fragment shown in list view"></textarea>
+        </label>
+
+        <label>
+          <span>Cover image</span>
+          <input id="coverImageInput" type="file" accept="image/*" />
+        </label>
+
+        <section class="blocks-panel">
+          <div class="blocks-header">
+            <h3>Content blocks</h3>
+            <div class="block-buttons">
+              <button id="addTextBlockBtn" type="button">+ Text</button>
+              <button id="addImageBlockBtn" type="button">+ Image</button>
+              <button id="addAudioBlockBtn" type="button">+ Audio</button>
+              <button id="addVideoBlockBtn" type="button">+ Video</button>
+            </div>
+          </div>
+
+          <div id="blocksContainer" class="blocks-container"></div>
+        </section>
+
+        <div class="form-actions">
+          <button id="saveBtn" type="submit">Save fragment</button>
+        </div>
+
+        <p id="saveMessage" class="message"></p>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="./js/admin.js"></script>
+</body>
+</html>
