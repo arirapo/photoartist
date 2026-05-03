@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Photodiary Experiment 360 Drift</title>
 
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@5/dist/photo-sphere-viewer.min.css"
-  />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
 
   <style>
     html, body {
@@ -279,8 +276,9 @@
   </button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
 <script type="module">
-  import { Viewer } from "https://cdn.jsdelivr.net/npm/photo-sphere-viewer@5/dist/photo-sphere-viewer.module.js";
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import {
     getFirestore,
@@ -308,7 +306,6 @@
   const dateLabelEl = document.getElementById("date-label");
   const anotherTraceBtn = document.getElementById("another-trace");
   const loadingEl = document.getElementById("loading");
-  const viewerContainer = document.getElementById("viewer");
 
   const GALLERY_JSON_URL = "../gallery/src/data/gallery.json";
   const GALLERY_IMAGE_BASE = "../gallery/images/";
@@ -396,18 +393,20 @@
       stopDriftMotion();
       viewer.destroy();
       viewer = null;
+      document.getElementById("viewer").innerHTML = "";
     }
 
-    viewer = new Viewer({
-      container: viewerContainer,
+    viewer = pannellum.viewer("viewer", {
+      type: "equirectangular",
       panorama: imageUrl,
-      navbar: false,
-      mousewheel: false,
-      touchmoveTwoFingers: false,
-      defaultYaw: Math.random() * Math.PI * 2,
-      defaultPitch: (Math.random() * 0.4) - 0.2,
-      minPitch: -0.7,
-      maxPitch: 0.7
+      autoLoad: true,
+      showControls: false,
+      mouseZoom: false,
+      draggable: false,
+      autoRotate: -2,
+      pitch: randomBetween(-12, 12),
+      yaw: randomBetween(-180, 180),
+      hfov: 110
     });
 
     await new Promise((resolve, reject) => {
@@ -415,15 +414,15 @@
         reject(new Error("Viewer ready timeout"));
       }, 12000);
 
-      viewer.addEventListener("ready", () => {
+      viewer.on("load", () => {
         clearTimeout(timeout);
         resolve();
-      }, { once: true });
+      });
 
-      viewer.addEventListener("panorama-error", () => {
+      viewer.on("error", (err) => {
         clearTimeout(timeout);
         reject(new Error("Panorama load error"));
-      }, { once: true });
+      });
     });
 
     dateLabelEl.textContent = currentImage.date || "";
@@ -437,30 +436,22 @@
 
     stopDriftMotion();
 
-    const basePosition = viewer.getPosition();
-
-    viewer.animate({
-      yaw: basePosition.yaw + Math.PI * 2,
-      pitch: basePosition.pitch,
-      speed: "6rpm"
-    }).catch(() => {});
-
     driftInterval = setInterval(() => {
       if (!viewer || holding) return;
 
-      const pos = viewer.getPosition();
-      const driftPitch = clamp(
-        pos.pitch + randomBetween(-0.035, 0.035),
-        -0.28,
-        0.28
-      );
-      const driftYaw = pos.yaw + randomBetween(0.08, 0.18);
+      const currentPitch = viewer.getPitch();
+      const currentYaw = viewer.getYaw();
 
-      viewer.animate({
-        yaw: driftYaw,
-        pitch: driftPitch,
-        speed: "2rpm"
-      }).catch(() => {});
+      const targetPitch = clamp(
+        currentPitch + randomBetween(-3, 3),
+        -20,
+        20
+      );
+
+      const targetYaw = currentYaw + randomBetween(6, 14);
+
+      viewer.setPitch(targetPitch, 3000);
+      viewer.setYaw(targetYaw, 3000);
     }, 5000);
   }
 
