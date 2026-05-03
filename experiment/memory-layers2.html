@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photodiary Experiment 3.0 – Memory Layers</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: relative;
+      width: min(92vw, 1400px);
+      max-height: 92vh;
+      aspect-ratio: 2 / 1;
+      background: #000;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .image-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #000;
+      z-index: 1;
+    }
+
+    .image-layer {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 110%;
+      height: 110%;
+      object-fit: cover;
+      display: block;
+      will-change: transform, filter, opacity;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+      backface-visibility: hidden;
+    }
+
+    .base-layer {
+      opacity: 1;
+      filter: brightness(0.98) contrast(1.02) saturate(0.98);
+      z-index: 1;
+      transition: filter 0.8s ease, opacity 0.8s ease;
+    }
+
+    .ghost-layer {
+      opacity: 0.28;
+      filter:
+        grayscale(1)
+        invert(1)
+        contrast(1.28)
+        brightness(0.92)
+        blur(2.8px);
+      mix-blend-mode: screen;
+      z-index: 2;
+      transition: filter 0.8s ease, opacity 0.8s ease;
+    }
+
+    .scene.active .base-layer {
+      filter: brightness(0.72) contrast(1.02) blur(1.4px);
+    }
+
+    .scene.active .ghost-layer {
+      opacity: 0.46;
+      filter:
+        grayscale(1)
+        invert(1)
+        contrast(1.45)
+        brightness(0.86)
+        blur(4.4px);
+    }
+
+    .hotspot {
+      position: absolute;
+      width: 50mm;
+      height: 50mm;
+      border-radius: 50%;
+      background: rgba(255, 0, 0, 0.18);
+      border: 2px solid rgba(255, 0, 0, 0.56);
+      transform: translate(-50%, -50%) scale(0.92);
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      box-shadow:
+        0 0 40px rgba(255, 0, 0, 0.10),
+        inset 0 0 30px rgba(255, 255, 255, 0.06);
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        left 0.9s ease,
+        top 0.9s ease,
+        opacity 0.9s ease,
+        transform 0.9s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+      z-index: 30;
+    }
+
+    .hotspot.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .hotspot.is-breathing {
+      animation: breathe 4.8s ease-in-out infinite;
+    }
+
+    .hotspot.is-holding {
+      animation: none;
+      background: rgba(255, 0, 0, 0.28);
+      border-color: rgba(255, 0, 0, 0.72);
+      box-shadow:
+        0 0 30px rgba(255, 0, 0, 0.20),
+        0 0 80px rgba(255, 0, 0, 0.18),
+        inset 0 0 40px rgba(255, 255, 255, 0.08);
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+
+    @keyframes breathe {
+      0% {
+        box-shadow:
+          0 0 28px rgba(255, 0, 0, 0.08),
+          0 0 0 rgba(255, 0, 0, 0),
+          inset 0 0 18px rgba(255,255,255,0.04);
+        background: rgba(255, 0, 0, 0.16);
+        border-color: rgba(255, 0, 0, 0.50);
+      }
+      50% {
+        box-shadow:
+          0 0 42px rgba(255, 0, 0, 0.14),
+          0 0 72px rgba(255, 0, 0, 0.08),
+          inset 0 0 28px rgba(255,255,255,0.07);
+        background: rgba(255, 0, 0, 0.22);
+        border-color: rgba(255, 0, 0, 0.64);
+      }
+      100% {
+        box-shadow:
+          0 0 28px rgba(255, 0, 0, 0.08),
+          0 0 0 rgba(255, 0, 0, 0),
+          inset 0 0 18px rgba(255,255,255,0.04);
+        background: rgba(255, 0, 0, 0.16);
+        border-color: rgba(255, 0, 0, 0.50);
+      }
+    }
+
+    .date-label {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      color: rgba(255, 255, 255, 0.60);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .date-label.is-visible {
+      opacity: 1;
+    }
+
+    .poem-layer {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-items: end;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(0,0,0,0.46), transparent 58%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 60;
+      padding-bottom: 70px;
+    }
+
+    .scene.active .poem-layer {
+      opacity: 1;
+    }
+
+    .poem-box {
+      padding: 30px;
+      max-width: 72ch;
+      position: relative;
+      z-index: 61;
+    }
+
+    .poem {
+      margin: 0;
+      color: rgba(255,255,255,0.97);
+      font-size: clamp(1rem, 1.25vw, 1.35rem);
+      line-height: 1.65;
+      opacity: 0;
+      transition: opacity 0.2s linear;
+      white-space: pre-line;
+      text-shadow:
+        0 2px 14px rgba(0, 0, 0, 0.55),
+        0 0 22px rgba(0, 0, 0, 0.32);
+      position: relative;
+      z-index: 62;
+    }
+
+    .another-trace {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 70;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.2s ease, color 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .another-trace.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .another-trace:hover,
+    .another-trace:focus-visible {
+      color: rgba(255, 255, 255, 0.72);
+      outline: none;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: #000;
+      transition: opacity 0.6s ease;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loading.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 900px) {
+      .scene {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        aspect-ratio: auto;
+      }
+
+      .image-layer {
+        width: 118%;
+        height: 118%;
+      }
+
+      .hotspot {
+        width: 42mm;
+        height: 42mm;
+      }
+
+      .poem-layer {
+        padding-bottom: 82px;
+        background: linear-gradient(to top, rgba(0,0,0,0.58), transparent 62%);
+      }
+
+      .poem-box {
+        padding: 18px 16px 16px;
+        max-width: none;
+      }
+
+      .poem {
+        font-size: clamp(0.92rem, 2.8vw, 1.08rem);
+        line-height: 1.52;
+      }
+
+      .date-label {
+        top: 14px;
+        font-size: 0.72rem;
+      }
+
+      .another-trace {
+        bottom: 14px;
+        font-size: 0.70rem;
+        letter-spacing: 0.10em;
+      }
+    }
+
+    @media (max-width: 900px) and (orientation: landscape) {
+      .poem-layer {
+        padding-bottom: 74px;
+        background: linear-gradient(to top, rgba(0,0,0,0.64), transparent 68%);
+      }
+
+      .poem-box {
+        padding: 12px 14px 10px;
+      }
+
+      .poem {
+        font-size: clamp(0.82rem, 2.2vw, 0.96rem);
+        line-height: 1.38;
+        max-width: 58ch;
+      }
+
+      .another-trace {
+        bottom: 10px;
+        font-size: 0.66rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="image-stage">
+    <img id="base-image" class="image-layer base-layer" src="" alt="Photodiary panorama" crossorigin="anonymous" />
+    <img id="ghost-image" class="image-layer ghost-layer" src="" alt="" crossorigin="anonymous" />
+  </div>
+
+  <div class="loading" id="loading">Loading trace</div>
+
+  <div class="date-label" id="date-label"></div>
+
+  <div
+    class="hotspot"
+    id="hotspot"
+    aria-label="Interactive hotspot"
+    role="button"
+    tabindex="0"
+  ></div>
+
+  <div class="poem-layer">
+    <div class="poem-box">
+      <p class="poem" id="poem"></p>
+    </div>
+  </div>
+
+  <button
+    class="another-trace"
+    id="another-trace"
+    type="button"
+    aria-label="Load another trace"
+  >
+    Another Trace
+  </button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+    authDomain: "photodiarygame.firebaseapp.com",
+    projectId: "photodiarygame",
+    storageBucket: "photodiarygame.firebasestorage.app",
+    messagingSenderId: "745003978989",
+    appId: "1:745003978989:web:727489ba72b34d77af3ce4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const scene = document.getElementById("scene");
+  const hotspot = document.getElementById("hotspot");
+  const poemEl = document.getElementById("poem");
+  const baseImageEl = document.getElementById("base-image");
+  const ghostImageEl = document.getElementById("ghost-image");
+  const dateLabelEl = document.getElementById("date-label");
+  const anotherTraceBtn = document.getElementById("another-trace");
+  const loadingEl = document.getElementById("loading");
+
+  const GALLERY_JSON_URL = "../gallery/src/data/gallery.json";
+  const GALLERY_IMAGE_BASE = "../gallery/images/";
+
+  let galleryItems = [];
+  let poems = ["Fallback poem"];
+  let audioObservations = [];
+  let currentPoem = poems[0];
+  let currentImage = null;
+  let currentAudioObservation = null;
+  let audio = null;
+
+  let assetsReady = false;
+  let holding = false;
+  let progress = 0;
+
+  let lastPoemIndex = -1;
+  let lastAudioIndex = -1;
+  let lastImageIndex = -1;
+
+  let hotspotVisible = false;
+  let hotspotMoveTimeout = null;
+  let anotherTraceTimeout = null;
+
+  let driftTime = Math.random() * 1000;
+
+  function pickRandomNoRepeat(arr, stateKey) {
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+
+    if (arr.length === 1) {
+      window[stateKey] = 0;
+      return arr[0];
+    }
+
+    let index;
+    const lastIndex = window[stateKey];
+
+    do {
+      index = Math.floor(Math.random() * arr.length);
+    } while (index === lastIndex);
+
+    window[stateKey] = index;
+    return arr[index];
+  }
+
+  function stopCurrentAudio() {
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio = null;
+    }
+  }
+
+  function prepareRandomAudio() {
+    stopCurrentAudio();
+
+    const selected = pickRandomNoRepeat(audioObservations, "lastAudioIndex");
+    currentAudioObservation = selected || null;
+
+    if (currentAudioObservation && currentAudioObservation.audioUrl) {
+      audio = new Audio(currentAudioObservation.audioUrl);
+      audio.loop = true;
+      audio.volume = 0;
+      audio.preload = "auto";
+    }
+  }
+
+  function prepareRandomPoem() {
+    const selected = pickRandomNoRepeat(poems, "lastPoemIndex");
+    currentPoem = selected || currentPoem;
+    poemEl.textContent = currentPoem;
+  }
+
+  function loadImageElement(imgEl, src, altText = "") {
+    return new Promise((resolve, reject) => {
+      imgEl.onload = () => resolve();
+      imgEl.onerror = () => reject(new Error(`Could not load image: ${src}`));
+      imgEl.alt = altText;
+      imgEl.src = src;
+    });
+  }
+
+  async function extractExifDate(imageElement) {
+    return new Promise((resolve) => {
+      if (!window.EXIF) {
+        resolve(null);
+        return;
+      }
+
+      try {
+        window.EXIF.getData(imageElement, function () {
+          const rawDate =
+            window.EXIF.getTag(this, "DateTimeOriginal") ||
+            window.EXIF.getTag(this, "CreateDate") ||
+            window.EXIF.getTag(this, "DateTime");
+
+          if (!rawDate || typeof rawDate !== "string") {
+            resolve(null);
+            return;
+          }
+
+          const match = rawDate.match(/^(\d{4}):(\d{2}):(\d{2})/);
+
+          if (!match) {
+            resolve(null);
+            return;
+          }
+
+          const [, year, month, day] = match;
+          resolve(`${year}-${month}-${day}`);
+        });
+      } catch (error) {
+        resolve(null);
+      }
+    });
+  }
+
+  async function prepareRandomImage() {
+    const selected = pickRandomNoRepeat(galleryItems, "lastImageIndex");
+    currentImage = selected || null;
+
+    if (!currentImage || !currentImage.file) {
+      throw new Error("No usable image found");
+    }
+
+    const imageUrl = GALLERY_IMAGE_BASE + currentImage.file;
+
+    await Promise.all([
+      loadImageElement(baseImageEl, imageUrl, currentImage.title || currentImage.file || "Photodiary panorama"),
+      loadImageElement(ghostImageEl, imageUrl, "")
+    ]);
+
+    driftTime = Math.random() * 1000;
+
+    const exifDate = await extractExifDate(baseImageEl);
+
+    if (exifDate) {
+      dateLabelEl.textContent = exifDate;
+    } else if (currentImage.date && currentImage.date.trim() !== "") {
+      dateLabelEl.textContent = currentImage.date;
+    } else {
+      dateLabelEl.textContent = "";
+    }
+  }
+
+  function getRandomHotspotPosition() {
+    const minX = 16;
+    const maxX = 84;
+    const minY = 18;
+    const maxY = 82;
+
+    return {
+      left: Math.random() * (maxX - minX) + minX,
+      top: Math.random() * (maxY - minY) + minY
+    };
+  }
+
+  function moveHotspotToRandomPosition() {
+    const pos = getRandomHotspotPosition();
+    hotspot.style.left = `${pos.left}%`;
+    hotspot.style.top = `${pos.top}%`;
+  }
+
+  function showDateLabel() {
+    if (dateLabelEl.textContent.trim() !== "") {
+      dateLabelEl.classList.add("is-visible");
+    }
+  }
+
+  function hideDateLabel() {
+    dateLabelEl.classList.remove("is-visible");
+  }
+
+  function showAnotherTraceWithDelay(delay = 20000) {
+    clearTimeout(anotherTraceTimeout);
+    anotherTraceBtn.classList.remove("is-visible");
+
+    anotherTraceTimeout = setTimeout(() => {
+      anotherTraceBtn.classList.add("is-visible");
+    }, delay);
+  }
+
+  function showHotspotWithDelay(delay = 900) {
+    clearTimeout(hotspotMoveTimeout);
+
+    hideDateLabel();
+    hotspot.classList.remove("is-visible", "is-holding", "is-breathing");
+    hotspotVisible = false;
+
+    hotspotMoveTimeout = setTimeout(() => {
+      moveHotspotToRandomPosition();
+      hotspot.classList.add("is-visible", "is-breathing");
+      hotspotVisible = true;
+      showDateLabel();
+    }, delay);
+  }
+
+  function hideHotspot() {
+    clearTimeout(hotspotMoveTimeout);
+    hideDateLabel();
+    hotspot.classList.remove("is-visible", "is-holding", "is-breathing");
+    hotspotVisible = false;
+  }
+
+  async function loadGalleryData() {
+    const response = await fetch(GALLERY_JSON_URL, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error("Could not load gallery.json");
+    }
+
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      galleryItems = data.filter(
+        item => item && typeof item.file === "string" && item.file.trim() !== ""
+      );
+    }
+
+    if (galleryItems.length === 0) {
+      throw new Error("gallery.json contains no usable images");
+    }
+
+    await prepareRandomImage();
+  }
+
+  async function loadFirebaseData() {
+    const experimentRef = doc(db, "experiments", "experiment2");
+    const experimentSnap = await getDoc(experimentRef);
+
+    if (experimentSnap.exists()) {
+      const experimentData = experimentSnap.data();
+
+      if (Array.isArray(experimentData.poems) && experimentData.poems.length > 0) {
+        poems = experimentData.poems.filter(
+          item => typeof item === "string" && item.trim() !== ""
+        );
+      } else if (
+        typeof experimentData.poemText === "string" &&
+        experimentData.poemText.trim() !== ""
+      ) {
+        poems = [experimentData.poemText];
+      }
+    }
+
+    const audioSnap = await getDocs(collection(db, "audio_observations"));
+    audioObservations = [];
+
+    audioSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (typeof data.audioUrl === "string" && data.audioUrl.trim() !== "") {
+        audioObservations.push({
+          id: docSnap.id,
+          ...data
+        });
+      }
+    });
+
+    prepareRandomPoem();
+  }
+
+  async function init() {
+    try {
+      await loadGalleryData();
+      await loadFirebaseData();
+
+      loadingEl.classList.add("is-hidden");
+      assetsReady = true;
+
+      showHotspotWithDelay(1200);
+      showAnotherTraceWithDelay(20000);
+    } catch (error) {
+      console.error("INIT ERROR:", error);
+      assetsReady = false;
+      loadingEl.textContent = `Error: ${error.message}`;
+    }
+  }
+
+  function updateImageDrift() {
+    driftTime += 0.016;
+
+    const baseX = Math.sin(driftTime * 0.21) * 18;
+    const baseY = Math.cos(driftTime * 0.11) * 6;
+    const baseScale = 1.000 + Math.sin(driftTime * 0.07) * 0.006 + progress * 0.010;
+
+    const ghostX = Math.sin(driftTime * 0.27 + 1.1) * 28 + progress * 10;
+    const ghostY = Math.cos(driftTime * 0.13 + 0.6) * 8 - progress * 4;
+    const ghostScale = 1.008 + Math.cos(driftTime * 0.09) * 0.010 + progress * 0.018;
+
+    baseImageEl.style.transform =
+      `translate3d(calc(-50% + ${baseX.toFixed(2)}px), calc(-50% + ${baseY.toFixed(2)}px), 0) scale(${baseScale.toFixed(4)})`;
+
+    ghostImageEl.style.transform =
+      `translate3d(calc(-50% + ${ghostX.toFixed(2)}px), calc(-50% + ${ghostY.toFixed(2)}px), 0) scale(${ghostScale.toFixed(4)})`;
+  }
+
+  function update() {
+    if (holding && assetsReady) {
+      progress += 0.02;
+    } else {
+      progress -= 0.03;
+    }
+
+    progress = Math.max(0, Math.min(1, progress));
+
+    scene.classList.toggle("active", progress > 0);
+    hotspot.classList.toggle("is-holding", progress > 0 && holding);
+
+    poemEl.style.opacity = progress.toFixed(3);
+    poemEl.textContent = currentPoem;
+
+    if (audio) {
+      audio.volume = progress * 0.5;
+    }
+
+    if (progress > 0 && audio && audio.paused) {
+      audio.play().catch(() => {});
+    }
+
+    if (progress === 0 && audio) {
+      stopCurrentAudio();
+    }
+
+    updateImageDrift();
+
+    requestAnimationFrame(update);
+  }
+
+  function beginHold(event) {
+    event.preventDefault();
+    if (!assetsReady || !hotspotVisible) return;
+
+    hideDateLabel();
+    hotspot.classList.remove("is-breathing");
+
+    prepareRandomPoem();
+    prepareRandomAudio();
+
+    holding = true;
+  }
+
+  function endHold(event) {
+    if (event) event.preventDefault();
+    if (!holding) return;
+
+    holding = false;
+    hideHotspot();
+    showHotspotWithDelay(1000);
+  }
+
+  hotspot.addEventListener("pointerdown", beginHold);
+  hotspot.addEventListener("pointerup", endHold);
+  hotspot.addEventListener("pointerleave", endHold);
+  hotspot.addEventListener("pointercancel", endHold);
+
+  hotspot.addEventListener("touchstart", beginHold, { passive: false });
+  hotspot.addEventListener("touchend", endHold, { passive: false });
+  hotspot.addEventListener("touchcancel", endHold, { passive: false });
+
+  hotspot.addEventListener("mousedown", beginHold);
+  hotspot.addEventListener("mouseup", endHold);
+
+  hotspot.addEventListener("keydown", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      beginHold(event);
+    }
+  });
+
+  hotspot.addEventListener("keyup", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      endHold(event);
+    }
+  });
+
+  anotherTraceBtn.addEventListener("click", () => {
+    window.location.reload();
+  });
+
+  init();
+  update();
+</script>
+
+</body>
+</html>
