@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiment 360 Drift</title>
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@5/dist/photo-sphere-viewer.min.css"
+  />
+
+  <style>
+    :root {
+      --bg: #08090b;
+      --text: #f2f1ea;
+      --muted: rgba(242, 241, 234, 0.68);
+      --line: rgba(255, 255, 255, 0.08);
+      --accent: rgba(255, 50, 50, 0.92);
+      --spot-size: 78px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      position: relative;
+    }
+
+    #viewer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      filter: blur(0px) saturate(1) brightness(1);
+      transition: filter 500ms ease;
+      background: #000;
+    }
+
+    #viewer.is-active {
+      filter: blur(6px) saturate(0.92) brightness(0.82);
+    }
+
+    .topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.32), rgba(0,0,0,0));
+    }
+
+    .titleblock {
+      max-width: 420px;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.35rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .titleblock h1 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .hint {
+      margin: 0.45rem 0 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .ui {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    #spot {
+      position: absolute;
+      width: var(--spot-size);
+      height: var(--spot-size);
+      border: none;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%,
+          rgba(255, 130, 130, 0.95) 0%,
+          rgba(255, 60, 60, 0.92) 22%,
+          rgba(210, 20, 20, 0.92) 44%,
+          rgba(140, 0, 0, 0.68) 62%,
+          rgba(255, 0, 0, 0.10) 76%,
+          rgba(255, 0, 0, 0.00) 100%);
+      box-shadow:
+        0 0 28px rgba(255, 0, 0, 0.25),
+        0 0 60px rgba(255, 0, 0, 0.18);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      pointer-events: auto;
+      opacity: 0.96;
+      transition:
+        transform 220ms ease,
+        opacity 220ms ease,
+        left 500ms ease,
+        top 500ms ease;
+      touch-action: none;
+    }
+
+    #spot:hover {
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+
+    #spot.is-pressed {
+      transform: translate(-50%, -50%) scale(0.95);
+      opacity: 1;
+    }
+
+    .bottom-panel {
+      position: absolute;
+      left: 50%;
+      bottom: 1.2rem;
+      transform: translateX(-50%);
+      width: min(92vw, 780px);
+      z-index: 45;
+      pointer-events: none;
+    }
+
+    .text-wrap {
+      border-top: 1px solid var(--line);
+      padding-top: 1rem;
+      min-height: 4.5rem;
+      text-align: center;
+      background: linear-gradient(to top, rgba(0,0,0,0.36), rgba(0,0,0,0));
+    }
+
+    #textDisplay {
+      margin: 0;
+      font-size: clamp(1rem, 1.5vw, 1.22rem);
+      line-height: 1.65;
+      color: var(--text);
+      text-wrap: balance;
+    }
+
+    .subtle {
+      margin-top: 0.55rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #050607;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      transition: opacity 400ms ease;
+    }
+
+    .loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .controls {
+      position: absolute;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 50;
+      display: flex;
+      gap: 0.6rem;
+      pointer-events: auto;
+    }
+
+    .controls button {
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--text);
+      padding: 0.7rem 0.9rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font: inherit;
+      backdrop-filter: blur(10px);
+    }
+
+    .controls button:hover {
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    @media (max-width: 700px) {
+      :root {
+        --spot-size: 72px;
+      }
+
+      .hint {
+        max-width: 18rem;
+      }
+
+      .controls {
+        right: 0.8rem;
+        bottom: 0.8rem;
+      }
+
+      .controls button {
+        padding: 0.62rem 0.84rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="viewer"></div>
+  <div id="loading" class="loading">Loading sphere…</div>
+
+  <div class="topbar">
+    <div class="titleblock">
+      <p class="eyebrow">experiment / 360 drift</p>
+      <h1>Drifting image, trace, sound</h1>
+      <p class="hint">Press the red trace.</p>
+    </div>
+  </div>
+
+  <div class="ui">
+    <button id="spot" aria-label="Activate trace"></button>
+  </div>
+
+  <div class="bottom-panel">
+    <div class="text-wrap">
+      <p id="textDisplay"> </p>
+      <div class="subtle">A rotating sphere with a drifting trace.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="reloadSceneBtn" type="button">Another sphere</button>
+  </div>
+
+  <audio id="audioPlayer" preload="auto"></audio>
+
+  <script type="module">
+    import { Viewer } from "https://cdn.jsdelivr.net/npm/photo-sphere-viewer@5/dist/photo-sphere-viewer.module.js";
+
+    /*
+      DEMO DATA
+      Replace these with your own image / text / audio URLs later.
+      Images must be equirectangular 360 panoramas.
+    */
+    const PANORAMAS = [
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2400&q=80",
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=2400&q=80",
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=2400&q=80"
+    ];
+
+    const TEXTS = [
+      "A trace appears before it means anything.",
+      "The image turns slowly, as if memory were deciding.",
+      "Touch the red point and the sphere answers in fragments.",
+      "A drift is not a direction. It is a permission.",
+      "The horizon continues where language hesitates.",
+      "A small signal waits on the skin of the world."
+    ];
+
+    const AUDIOS = [
+      "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8d14b3160.mp3?filename=ambient-piano-amp-strings-10711.mp3",
+      "https://cdn.pixabay.com/download/audio/2022/10/25/audio_94631d26e1.mp3?filename=ethereal-vistas-126153.mp3",
+      "https://cdn.pixabay.com/download/audio/2022/08/04/audio_12b0c744af.mp3?filename=deep-ambient-114215.mp3"
+    ];
+
+    const viewerEl = document.getElementById("viewer");
+    const loadingEl = document.getElementById("loading");
+    const textDisplay = document.getElementById("textDisplay");
+    const spot = document.getElementById("spot");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const reloadSceneBtn = document.getElementById("reloadSceneBtn");
+
+    let viewer = null;
+    let driftTimer = null;
+    let isPressing = false;
+
+    init();
+
+    async function init() {
+      await createScene();
+      placeSpotRandomly();
+      bindUI();
+    }
+
+    async function createScene() {
+      if (viewer) {
+        stopDrift();
+        viewer.destroy();
+        viewer = null;
+      }
+
+      loadingEl.classList.remove("hidden");
+
+      const panoramaUrl = pickRandom(PANORAMAS);
+
+      viewer = new Viewer({
+        container: viewerEl,
+        panorama: panoramaUrl,
+        navbar: false,
+        mousewheel: false,
+        touchmoveTwoFingers: false,
+        defaultYaw: randomBetween(-Math.PI, Math.PI),
+        defaultPitch: randomBetween(-0.25, 0.25),
+        minPitch: -0.7,
+        maxPitch: 0.7,
+        sphereCorrection: { pan: 0, tilt: 0, roll: 0 }
+      });
+
+      viewer.addEventListener("ready", () => {
+        loadingEl.classList.add("hidden");
+        startAutoMotion();
+      });
+    }
+
+    function bindUI() {
+      reloadSceneBtn.addEventListener("click", async () => {
+        stopAudio();
+        textDisplay.textContent = "";
+        await createScene();
+        placeSpotRandomly();
+      });
+
+      const pressStart = (e) => {
+        e.preventDefault();
+        triggerTrace();
+      };
+
+      const pressEnd = () => {
+        releaseTrace();
+      };
+
+      spot.addEventListener("pointerdown", pressStart);
+      window.addEventListener("pointerup", pressEnd);
+      window.addEventListener("pointercancel", pressEnd);
+      window.addEventListener("blur", pressEnd);
+    }
+
+    function triggerTrace() {
+      if (isPressing) return;
+      isPressing = true;
+
+      spot.classList.add("is-pressed");
+      viewerEl.classList.add("is-active");
+
+      const text = pickRandom(TEXTS);
+      const audio = pickRandom(AUDIOS);
+
+      textDisplay.textContent = text;
+      playAudio(audio);
+    }
+
+    function releaseTrace() {
+      if (!isPressing) return;
+      isPressing = false;
+
+      spot.classList.remove("is-pressed");
+      viewerEl.classList.remove("is-active");
+      stopAudio();
+      placeSpotRandomly();
+    }
+
+    function playAudio(src) {
+      try {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        audioPlayer.src = src;
+        audioPlayer.play().catch(() => {});
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function stopAudio() {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+    }
+
+    function startAutoMotion() {
+      if (!viewer) return;
+
+      stopDrift();
+
+      // very slow base rotation
+      viewer.animate({
+        yaw: viewer.getPosition().yaw + Math.PI * 2,
+        pitch: viewer.getPosition().pitch,
+        speed: "8rpm"
+      });
+
+      // subtle drifting pitch variation
+      driftTimer = setInterval(() => {
+        if (!viewer || isPressing) return;
+
+        const pos = viewer.getPosition();
+        const newPitch = clamp(
+          pos.pitch + randomBetween(-0.05, 0.05),
+          -0.35,
+          0.35
+        );
+
+        const newYaw = pos.yaw + randomBetween(0.12, 0.22);
+
+        viewer.animate({
+          yaw: newYaw,
+          pitch: newPitch,
+          speed: "2rpm"
+        }).catch(() => {});
+      }, 5000);
+    }
+
+    function stopDrift() {
+      if (driftTimer) {
+        clearInterval(driftTimer);
+        driftTimer = null;
+      }
+    }
+
+    function placeSpotRandomly() {
+      const paddingX = 18;
+      const paddingTop = 84;
+      const paddingBottom = 160;
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const x = randomBetween(
+        Math.max(60, paddingX + 40),
+        Math.min(vw - 60, vw - paddingX - 40)
+      );
+
+      const y = randomBetween(
+        Math.max(110, paddingTop),
+        Math.min(vh - 100, vh - paddingBottom)
+      );
+
+      spot.style.left = `${x}px`;
+      spot.style.top = `${y}px`;
+    }
+
+    window.addEventListener("resize", () => {
+      placeSpotRandomly();
+    });
+
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+  </script>
+</body>
+</html>
