@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Experiment 360 Drift</title>
+  <title>Photodiary Experiment 360 Drift</title>
 
   <link
     rel="stylesheet"
@@ -11,33 +11,26 @@
   />
 
   <style>
-    :root {
-      --bg: #08090b;
-      --text: #f2f1ea;
-      --muted: rgba(242, 241, 234, 0.68);
-      --line: rgba(255, 255, 255, 0.08);
-      --accent: rgba(255, 50, 50, 0.92);
-      --spot-size: 78px;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
-    body {
+    html, body {
       margin: 0;
-      width: 100%;
+      padding: 0;
       height: 100%;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
       overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
     }
 
     body {
+      display: grid;
+      place-items: center;
+    }
+
+    .scene {
       position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      overflow: hidden;
     }
 
     #viewer {
@@ -45,445 +38,645 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      filter: blur(0px) saturate(1) brightness(1);
-      transition: filter 500ms ease;
+      transition: filter 0.8s ease, transform 1s ease;
       background: #000;
     }
 
-    #viewer.is-active {
-      filter: blur(6px) saturate(0.92) brightness(0.82);
+    .scene.active #viewer {
+      filter: brightness(0.72) blur(2px);
+      transform: scale(1.012);
     }
 
-    .topbar {
+    .hotspot {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 30;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      padding: 1rem 1.1rem;
-      pointer-events: none;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.32), rgba(0,0,0,0));
-    }
-
-    .titleblock {
-      max-width: 420px;
-    }
-
-    .eyebrow {
-      margin: 0 0 0.35rem;
-      font-size: 0.68rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .titleblock h1 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-
-    .hint {
-      margin: 0.45rem 0 0;
-      font-size: 0.88rem;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .ui {
-      position: absolute;
-      inset: 0;
-      z-index: 40;
-      pointer-events: none;
-    }
-
-    #spot {
-      position: absolute;
-      width: var(--spot-size);
-      height: var(--spot-size);
-      border: none;
+      width: 50mm;
+      height: 50mm;
       border-radius: 50%;
-      background:
-        radial-gradient(circle at 50% 50%,
-          rgba(255, 130, 130, 0.95) 0%,
-          rgba(255, 60, 60, 0.92) 22%,
-          rgba(210, 20, 20, 0.92) 44%,
-          rgba(140, 0, 0, 0.68) 62%,
-          rgba(255, 0, 0, 0.10) 76%,
-          rgba(255, 0, 0, 0.00) 100%);
-      box-shadow:
-        0 0 28px rgba(255, 0, 0, 0.25),
-        0 0 60px rgba(255, 0, 0, 0.18);
-      transform: translate(-50%, -50%);
+      background: rgba(255, 0, 0, 0.20);
+      border: 2px solid rgba(255, 0, 0, 0.58);
+      transform: translate(-50%, -50%) scale(0.92);
       cursor: pointer;
-      pointer-events: auto;
-      opacity: 0.96;
-      transition:
-        transform 220ms ease,
-        opacity 220ms ease,
-        left 500ms ease,
-        top 500ms ease;
       touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      box-shadow: 0 0 40px rgba(255, 0, 0, 0.10);
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        left 0.9s ease,
+        top 0.9s ease,
+        opacity 0.9s ease,
+        transform 0.9s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+      z-index: 20;
     }
 
-    #spot:hover {
+    .hotspot.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .hotspot.is-breathing {
+      animation: breathe 4.8s ease-in-out infinite;
+    }
+
+    .hotspot.is-holding {
+      animation: none;
+      background: rgba(255, 0, 0, 0.30);
+      border-color: rgba(255, 0, 0, 0.72);
+      box-shadow:
+        0 0 30px rgba(255, 0, 0, 0.20),
+        0 0 80px rgba(255, 0, 0, 0.18);
       transform: translate(-50%, -50%) scale(1.04);
     }
 
-    #spot.is-pressed {
-      transform: translate(-50%, -50%) scale(0.95);
+    @keyframes breathe {
+      0% {
+        box-shadow:
+          0 0 28px rgba(255, 0, 0, 0.08),
+          0 0 0 rgba(255, 0, 0, 0);
+        background: rgba(255, 0, 0, 0.18);
+        border-color: rgba(255, 0, 0, 0.52);
+      }
+      50% {
+        box-shadow:
+          0 0 42px rgba(255, 0, 0, 0.14),
+          0 0 72px rgba(255, 0, 0, 0.08);
+        background: rgba(255, 0, 0, 0.24);
+        border-color: rgba(255, 0, 0, 0.64);
+      }
+      100% {
+        box-shadow:
+          0 0 28px rgba(255, 0, 0, 0.08),
+          0 0 0 rgba(255, 0, 0, 0);
+        background: rgba(255, 0, 0, 0.18);
+        border-color: rgba(255, 0, 0, 0.52);
+      }
+    }
+
+    .date-label {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      color: rgba(255, 255, 255, 0.60);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .date-label.is-visible {
       opacity: 1;
     }
 
-    .bottom-panel {
+    .poem-layer {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-items: end;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(0,0,0,0.35), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 15;
+    }
+
+    .scene.active .poem-layer {
+      opacity: 1;
+    }
+
+    .poem-box {
+      padding: 30px;
+      max-width: 72ch;
+    }
+
+    .poem {
+      margin: 0;
+      color: white;
+      font-size: clamp(1rem, 1.25vw, 1.35rem);
+      line-height: 1.65;
+      opacity: 0;
+      transition: opacity 0.2s linear;
+      white-space: pre-line;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    .another-trace {
       position: absolute;
       left: 50%;
-      bottom: 1.2rem;
+      bottom: 22px;
       transform: translateX(-50%);
-      width: min(92vw, 780px);
-      z-index: 45;
+      z-index: 30;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      opacity: 0;
       pointer-events: none;
+      transition: opacity 1.2s ease, color 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .text-wrap {
-      border-top: 1px solid var(--line);
-      padding-top: 1rem;
-      min-height: 4.5rem;
-      text-align: center;
-      background: linear-gradient(to top, rgba(0,0,0,0.36), rgba(0,0,0,0));
+    .another-trace.is-visible {
+      opacity: 1;
+      pointer-events: auto;
     }
 
-    #textDisplay {
-      margin: 0;
-      font-size: clamp(1rem, 1.5vw, 1.22rem);
-      line-height: 1.65;
-      color: var(--text);
-      text-wrap: balance;
-    }
-
-    .subtle {
-      margin-top: 0.55rem;
-      font-size: 0.82rem;
-      color: var(--muted);
+    .another-trace:hover,
+    .another-trace:focus-visible {
+      color: rgba(255, 255, 255, 0.72);
+      outline: none;
     }
 
     .loading {
       position: absolute;
       inset: 0;
-      z-index: 60;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #050607;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      font-size: 0.82rem;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      transition: opacity 400ms ease;
+      background: #000;
+      transition: opacity 0.6s ease;
     }
 
-    .loading.hidden {
+    .loading.is-hidden {
       opacity: 0;
       pointer-events: none;
     }
 
-    .controls {
-      position: absolute;
-      right: 1rem;
-      bottom: 1rem;
-      z-index: 50;
-      display: flex;
-      gap: 0.6rem;
-      pointer-events: auto;
-    }
-
-    .controls button {
-      border: 1px solid var(--line);
-      background: rgba(0, 0, 0, 0.35);
-      color: var(--text);
-      padding: 0.7rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font: inherit;
-      backdrop-filter: blur(10px);
-    }
-
-    .controls button:hover {
-      border-color: rgba(255,255,255,0.18);
-    }
-
-    @media (max-width: 700px) {
-      :root {
-        --spot-size: 72px;
+    @media (max-width: 900px) {
+      .hotspot {
+        width: 42mm;
+        height: 42mm;
       }
 
-      .hint {
-        max-width: 18rem;
+      .poem-box {
+        padding: 22px 18px 28px;
       }
 
-      .controls {
-        right: 0.8rem;
-        bottom: 0.8rem;
+      .date-label {
+        top: 14px;
+        font-size: 0.72rem;
       }
 
-      .controls button {
-        padding: 0.62rem 0.84rem;
+      .another-trace {
+        bottom: 18px;
+        font-size: 0.72rem;
       }
     }
   </style>
 </head>
 <body>
+
+<div class="scene" id="scene">
   <div id="viewer"></div>
-  <div id="loading" class="loading">Loading sphere…</div>
 
-  <div class="topbar">
-    <div class="titleblock">
-      <p class="eyebrow">experiment / 360 drift</p>
-      <h1>Drifting image, trace, sound</h1>
-      <p class="hint">Press the red trace.</p>
+  <div class="loading" id="loading">Loading sphere</div>
+
+  <div class="date-label" id="date-label"></div>
+
+  <div
+    class="hotspot"
+    id="hotspot"
+    aria-label="Interactive hotspot"
+    role="button"
+    tabindex="0"
+  ></div>
+
+  <div class="poem-layer">
+    <div class="poem-box">
+      <p class="poem" id="poem"></p>
     </div>
   </div>
 
-  <div class="ui">
-    <button id="spot" aria-label="Activate trace"></button>
-  </div>
+  <button
+    class="another-trace"
+    id="another-trace"
+    type="button"
+    aria-label="Load another trace"
+  >
+    Another Trace
+  </button>
+</div>
 
-  <div class="bottom-panel">
-    <div class="text-wrap">
-      <p id="textDisplay"> </p>
-      <div class="subtle">A rotating sphere with a drifting trace.</div>
-    </div>
-  </div>
+<script type="module">
+  import { Viewer } from "https://cdn.jsdelivr.net/npm/photo-sphere-viewer@5/dist/photo-sphere-viewer.module.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  <div class="controls">
-    <button id="reloadSceneBtn" type="button">Another sphere</button>
-  </div>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD-FTHW5Mg8o7_JNXNalKIw_sdxtC-A-G0",
+    authDomain: "photodiarygame.firebaseapp.com",
+    projectId: "photodiarygame",
+    storageBucket: "photodiarygame.firebasestorage.app",
+    messagingSenderId: "745003978989",
+    appId: "1:745003978989:web:727489ba72b34d77af3ce4"
+  };
 
-  <audio id="audioPlayer" preload="auto"></audio>
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  <script type="module">
-    import { Viewer } from "https://cdn.jsdelivr.net/npm/photo-sphere-viewer@5/dist/photo-sphere-viewer.module.js";
+  const scene = document.getElementById("scene");
+  const hotspot = document.getElementById("hotspot");
+  const poemEl = document.getElementById("poem");
+  const dateLabelEl = document.getElementById("date-label");
+  const anotherTraceBtn = document.getElementById("another-trace");
+  const loadingEl = document.getElementById("loading");
+  const viewerContainer = document.getElementById("viewer");
 
-    /*
-      DEMO DATA
-      Replace these with your own image / text / audio URLs later.
-      Images must be equirectangular 360 panoramas.
-    */
-    const PANORAMAS = [
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2400&q=80",
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=2400&q=80",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=2400&q=80"
-    ];
+  const GALLERY_360_JSON_URL = "../gallery/src/data/gallery-360.json";
+  const GALLERY_360_IMAGE_BASE = "../gallery/images/360/";
 
-    const TEXTS = [
-      "A trace appears before it means anything.",
-      "The image turns slowly, as if memory were deciding.",
-      "Touch the red point and the sphere answers in fragments.",
-      "A drift is not a direction. It is a permission.",
-      "The horizon continues where language hesitates.",
-      "A small signal waits on the skin of the world."
-    ];
+  let galleryItems = [];
+  let poems = ["Fallback poem"];
+  let audioObservations = [];
+  let currentPoem = poems[0];
+  let currentImage = null;
+  let currentAudioObservation = null;
+  let audio = null;
+  let viewer = null;
 
-    const AUDIOS = [
-      "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8d14b3160.mp3?filename=ambient-piano-amp-strings-10711.mp3",
-      "https://cdn.pixabay.com/download/audio/2022/10/25/audio_94631d26e1.mp3?filename=ethereal-vistas-126153.mp3",
-      "https://cdn.pixabay.com/download/audio/2022/08/04/audio_12b0c744af.mp3?filename=deep-ambient-114215.mp3"
-    ];
+  let assetsReady = false;
+  let holding = false;
+  let progress = 0;
 
-    const viewerEl = document.getElementById("viewer");
-    const loadingEl = document.getElementById("loading");
-    const textDisplay = document.getElementById("textDisplay");
-    const spot = document.getElementById("spot");
-    const audioPlayer = document.getElementById("audioPlayer");
-    const reloadSceneBtn = document.getElementById("reloadSceneBtn");
+  let lastPoemIndex = -1;
+  let lastAudioIndex = -1;
+  let lastImageIndex = -1;
 
-    let viewer = null;
-    let driftTimer = null;
-    let isPressing = false;
+  let hotspotVisible = false;
+  let hotspotMoveTimeout = null;
+  let anotherTraceTimeout = null;
+  let driftInterval = null;
 
-    init();
-
-    async function init() {
-      await createScene();
-      placeSpotRandomly();
-      bindUI();
+  function pickRandomNoRepeat(arr, stateKey) {
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    if (arr.length === 1) {
+      window[stateKey] = 0;
+      return arr[0];
     }
 
-    async function createScene() {
-      if (viewer) {
-        stopDrift();
-        viewer.destroy();
-        viewer = null;
-      }
+    let index;
+    const lastIndex = window[stateKey];
 
-      loadingEl.classList.remove("hidden");
+    do {
+      index = Math.floor(Math.random() * arr.length);
+    } while (index === lastIndex);
 
-      const panoramaUrl = pickRandom(PANORAMAS);
+    window[stateKey] = index;
+    return arr[index];
+  }
 
-      viewer = new Viewer({
-        container: viewerEl,
-        panorama: panoramaUrl,
-        navbar: false,
-        mousewheel: false,
-        touchmoveTwoFingers: false,
-        defaultYaw: randomBetween(-Math.PI, Math.PI),
-        defaultPitch: randomBetween(-0.25, 0.25),
-        minPitch: -0.7,
-        maxPitch: 0.7,
-        sphereCorrection: { pan: 0, tilt: 0, roll: 0 }
-      });
+  function stopCurrentAudio() {
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio = null;
+    }
+  }
 
-      viewer.addEventListener("ready", () => {
-        loadingEl.classList.add("hidden");
-        startAutoMotion();
-      });
+  function prepareRandomAudio() {
+    stopCurrentAudio();
+
+    const selected = pickRandomNoRepeat(audioObservations, "lastAudioIndex");
+    currentAudioObservation = selected || null;
+
+    if (currentAudioObservation && currentAudioObservation.audioUrl) {
+      audio = new Audio(currentAudioObservation.audioUrl);
+      audio.loop = true;
+      audio.volume = 0;
+      audio.preload = "auto";
+    }
+  }
+
+  function prepareRandomPoem() {
+    const selected = pickRandomNoRepeat(poems, "lastPoemIndex");
+    currentPoem = selected || currentPoem;
+    poemEl.textContent = currentPoem;
+  }
+
+  async function prepareRandomImage() {
+    const selected = pickRandomNoRepeat(galleryItems, "lastImageIndex");
+    currentImage = selected || null;
+
+    if (!currentImage || !currentImage.file) {
+      throw new Error("No usable 360 image found");
     }
 
-    function bindUI() {
-      reloadSceneBtn.addEventListener("click", async () => {
-        stopAudio();
-        textDisplay.textContent = "";
-        await createScene();
-        placeSpotRandomly();
-      });
+    const imageUrl = GALLERY_360_IMAGE_BASE + currentImage.file;
 
-      const pressStart = (e) => {
-        e.preventDefault();
-        triggerTrace();
-      };
-
-      const pressEnd = () => {
-        releaseTrace();
-      };
-
-      spot.addEventListener("pointerdown", pressStart);
-      window.addEventListener("pointerup", pressEnd);
-      window.addEventListener("pointercancel", pressEnd);
-      window.addEventListener("blur", pressEnd);
+    if (viewer) {
+      stopDriftMotion();
+      viewer.destroy();
+      viewer = null;
     }
 
-    function triggerTrace() {
-      if (isPressing) return;
-      isPressing = true;
-
-      spot.classList.add("is-pressed");
-      viewerEl.classList.add("is-active");
-
-      const text = pickRandom(TEXTS);
-      const audio = pickRandom(AUDIOS);
-
-      textDisplay.textContent = text;
-      playAudio(audio);
-    }
-
-    function releaseTrace() {
-      if (!isPressing) return;
-      isPressing = false;
-
-      spot.classList.remove("is-pressed");
-      viewerEl.classList.remove("is-active");
-      stopAudio();
-      placeSpotRandomly();
-    }
-
-    function playAudio(src) {
-      try {
-        audioPlayer.pause();
-        audioPlayer.currentTime = 0;
-        audioPlayer.src = src;
-        audioPlayer.play().catch(() => {});
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    function stopAudio() {
-      audioPlayer.pause();
-      audioPlayer.currentTime = 0;
-    }
-
-    function startAutoMotion() {
-      if (!viewer) return;
-
-      stopDrift();
-
-      // very slow base rotation
-      viewer.animate({
-        yaw: viewer.getPosition().yaw + Math.PI * 2,
-        pitch: viewer.getPosition().pitch,
-        speed: "8rpm"
-      });
-
-      // subtle drifting pitch variation
-      driftTimer = setInterval(() => {
-        if (!viewer || isPressing) return;
-
-        const pos = viewer.getPosition();
-        const newPitch = clamp(
-          pos.pitch + randomBetween(-0.05, 0.05),
-          -0.35,
-          0.35
-        );
-
-        const newYaw = pos.yaw + randomBetween(0.12, 0.22);
-
-        viewer.animate({
-          yaw: newYaw,
-          pitch: newPitch,
-          speed: "2rpm"
-        }).catch(() => {});
-      }, 5000);
-    }
-
-    function stopDrift() {
-      if (driftTimer) {
-        clearInterval(driftTimer);
-        driftTimer = null;
-      }
-    }
-
-    function placeSpotRandomly() {
-      const paddingX = 18;
-      const paddingTop = 84;
-      const paddingBottom = 160;
-
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-
-      const x = randomBetween(
-        Math.max(60, paddingX + 40),
-        Math.min(vw - 60, vw - paddingX - 40)
-      );
-
-      const y = randomBetween(
-        Math.max(110, paddingTop),
-        Math.min(vh - 100, vh - paddingBottom)
-      );
-
-      spot.style.left = `${x}px`;
-      spot.style.top = `${y}px`;
-    }
-
-    window.addEventListener("resize", () => {
-      placeSpotRandomly();
+    viewer = new Viewer({
+      container: viewerContainer,
+      panorama: imageUrl,
+      navbar: false,
+      mousewheel: false,
+      touchmoveTwoFingers: false,
+      defaultYaw: Math.random() * Math.PI * 2,
+      defaultPitch: (Math.random() * 0.4) - 0.2,
+      minPitch: -0.7,
+      maxPitch: 0.7
     });
 
-    function pickRandom(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
+    await new Promise((resolve) => {
+      viewer.addEventListener("ready", resolve, { once: true });
+    });
+
+    dateLabelEl.textContent = currentImage.date || "";
+    loadingEl.classList.add("is-hidden");
+
+    startDriftMotion();
+  }
+
+  function startDriftMotion() {
+    if (!viewer) return;
+
+    stopDriftMotion();
+
+    const basePosition = viewer.getPosition();
+
+    viewer.animate({
+      yaw: basePosition.yaw + Math.PI * 2,
+      pitch: basePosition.pitch,
+      speed: "6rpm"
+    }).catch(() => {});
+
+    driftInterval = setInterval(() => {
+      if (!viewer || holding) return;
+
+      const pos = viewer.getPosition();
+      const driftPitch = clamp(
+        pos.pitch + randomBetween(-0.035, 0.035),
+        -0.28,
+        0.28
+      );
+      const driftYaw = pos.yaw + randomBetween(0.08, 0.18);
+
+      viewer.animate({
+        yaw: driftYaw,
+        pitch: driftPitch,
+        speed: "2rpm"
+      }).catch(() => {});
+    }, 5000);
+  }
+
+  function stopDriftMotion() {
+    if (driftInterval) {
+      clearInterval(driftInterval);
+      driftInterval = null;
+    }
+  }
+
+  function getRandomHotspotPosition() {
+    const minX = 16;
+    const maxX = 84;
+    const minY = 18;
+    const maxY = 82;
+
+    return {
+      left: Math.random() * (maxX - minX) + minX,
+      top: Math.random() * (maxY - minY) + minY
+    };
+  }
+
+  function moveHotspotToRandomPosition() {
+    const pos = getRandomHotspotPosition();
+    hotspot.style.left = `${pos.left}%`;
+    hotspot.style.top = `${pos.top}%`;
+  }
+
+  function showDateLabel() {
+    if (dateLabelEl.textContent.trim() !== "") {
+      dateLabelEl.classList.add("is-visible");
+    }
+  }
+
+  function hideDateLabel() {
+    dateLabelEl.classList.remove("is-visible");
+  }
+
+  function showAnotherTraceWithDelay(delay = 20000) {
+    clearTimeout(anotherTraceTimeout);
+    anotherTraceBtn.classList.remove("is-visible");
+
+    anotherTraceTimeout = setTimeout(() => {
+      anotherTraceBtn.classList.add("is-visible");
+    }, delay);
+  }
+
+  function showHotspotWithDelay(delay = 900) {
+    clearTimeout(hotspotMoveTimeout);
+
+    hideDateLabel();
+    hotspot.classList.remove("is-visible", "is-holding", "is-breathing");
+    hotspotVisible = false;
+
+    hotspotMoveTimeout = setTimeout(() => {
+      moveHotspotToRandomPosition();
+      hotspot.classList.add("is-visible", "is-breathing");
+      hotspotVisible = true;
+      showDateLabel();
+    }, delay);
+  }
+
+  function hideHotspot() {
+    clearTimeout(hotspotMoveTimeout);
+    hideDateLabel();
+    hotspot.classList.remove("is-visible", "is-holding", "is-breathing");
+    hotspotVisible = false;
+  }
+
+  async function loadGalleryData() {
+    const response = await fetch(GALLERY_360_JSON_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Could not load gallery-360.json");
     }
 
-    function randomBetween(min, max) {
-      return Math.random() * (max - min) + min;
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      galleryItems = data.filter(
+        item => item && typeof item.file === "string" && item.file.trim() !== ""
+      );
     }
 
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
+    if (galleryItems.length === 0) {
+      throw new Error("gallery-360.json contains no usable images");
     }
-  </script>
+
+    await prepareRandomImage();
+  }
+
+  async function loadFirebaseData() {
+    const experimentRef = doc(db, "experiments", "experiment2");
+    const experimentSnap = await getDoc(experimentRef);
+
+    if (experimentSnap.exists()) {
+      const experimentData = experimentSnap.data();
+
+      if (Array.isArray(experimentData.poems) && experimentData.poems.length > 0) {
+        poems = experimentData.poems.filter(
+          item => typeof item === "string" && item.trim() !== ""
+        );
+      } else if (
+        typeof experimentData.poemText === "string" &&
+        experimentData.poemText.trim() !== ""
+      ) {
+        poems = [experimentData.poemText];
+      }
+    }
+
+    const audioSnap = await getDocs(collection(db, "audio_observations"));
+    audioObservations = [];
+
+    audioSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (typeof data.audioUrl === "string" && data.audioUrl.trim() !== "") {
+        audioObservations.push({
+          id: docSnap.id,
+          ...data
+        });
+      }
+    });
+
+    prepareRandomPoem();
+  }
+
+  async function init() {
+    try {
+      await loadGalleryData();
+      await loadFirebaseData();
+      assetsReady = true;
+      showHotspotWithDelay(1200);
+      showAnotherTraceWithDelay(20000);
+    } catch (error) {
+      console.error(error);
+      assetsReady = true;
+      loadingEl.textContent = "Could not load sphere";
+      showAnotherTraceWithDelay(20000);
+    }
+  }
+
+  function update() {
+    if (holding && assetsReady) {
+      progress += 0.02;
+    } else {
+      progress -= 0.03;
+    }
+
+    progress = Math.max(0, Math.min(1, progress));
+
+    scene.classList.toggle("active", progress > 0);
+    hotspot.classList.toggle("is-holding", progress > 0 && holding);
+
+    poemEl.style.opacity = progress.toFixed(3);
+    poemEl.textContent = currentPoem;
+
+    if (audio) {
+      audio.volume = progress * 0.5;
+    }
+
+    if (progress > 0 && audio && audio.paused) {
+      audio.play().catch(() => {});
+    }
+
+    if (progress === 0 && audio) {
+      stopCurrentAudio();
+    }
+
+    requestAnimationFrame(update);
+  }
+
+  function beginHold(event) {
+    event.preventDefault();
+    if (!assetsReady || !hotspotVisible) return;
+
+    hideDateLabel();
+    hotspot.classList.remove("is-breathing");
+
+    prepareRandomPoem();
+    prepareRandomAudio();
+
+    holding = true;
+  }
+
+  function endHold(event) {
+    if (event) event.preventDefault();
+    if (!holding) return;
+
+    holding = false;
+    hideHotspot();
+    showHotspotWithDelay(1000);
+  }
+
+  hotspot.addEventListener("pointerdown", beginHold);
+  hotspot.addEventListener("pointerup", endHold);
+  hotspot.addEventListener("pointerleave", endHold);
+  hotspot.addEventListener("pointercancel", endHold);
+
+  hotspot.addEventListener("touchstart", beginHold, { passive: false });
+  hotspot.addEventListener("touchend", endHold, { passive: false });
+  hotspot.addEventListener("touchcancel", endHold, { passive: false });
+
+  hotspot.addEventListener("mousedown", beginHold);
+  hotspot.addEventListener("mouseup", endHold);
+
+  hotspot.addEventListener("keydown", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      beginHold(event);
+    }
+  });
+
+  hotspot.addEventListener("keyup", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      endHold(event);
+    }
+  });
+
+  anotherTraceBtn.addEventListener("click", () => {
+    window.location.reload();
+  });
+
+  init();
+  update();
+
+  function randomBetween(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+</script>
+
 </body>
 </html>
