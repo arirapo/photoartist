@@ -1,6 +1,7 @@
 import { auth, db, storage, serverTimestamp } from "./firebase-init.js";
 import {
-  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -14,11 +15,11 @@ import {
   uploadBytes
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+const provider = new GoogleAuthProvider();
+
 const authSection = document.getElementById("authSection");
 const adminSection = document.getElementById("adminSection");
 const loginForm = document.getElementById("loginForm");
-const emailInput = document.getElementById("emailInput");
-const passwordInput = document.getElementById("passwordInput");
 const authMessage = document.getElementById("authMessage");
 const logoutBtn = document.getElementById("logoutBtn");
 
@@ -85,11 +86,11 @@ function bindEvents() {
 
 async function handleLogin(e) {
   e.preventDefault();
-  authMessage.textContent = "Signing in…";
+  authMessage.textContent = "Signing in with Google…";
   authMessage.className = "message";
 
   try {
-    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+    await signInWithPopup(auth, provider);
     authMessage.textContent = "";
   } catch (error) {
     console.error(error);
