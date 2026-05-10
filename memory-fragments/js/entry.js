@@ -87,7 +87,7 @@ function renderBlock(block) {
       return `
         <section class="entry-block entry-block--image">
           <figure>
-            <img src="${block.src}" alt="${escapeHtml(block.alt || "")}" loading="lazy" />
+            <img src="${escapeHtml(block.src || "")}" alt="${escapeHtml(block.alt || "")}" loading="lazy" />
             ${block.caption ? `<figcaption>${escapeHtml(block.caption)}</figcaption>` : ""}
           </figure>
         </section>
@@ -97,7 +97,7 @@ function renderBlock(block) {
       return `
         <section class="entry-block entry-block--audio">
           <figure>
-            <audio controls preload="metadata" src="${block.src}"></audio>
+            <audio controls preload="metadata" src="${escapeHtml(block.src || "")}"></audio>
             ${block.caption ? `<figcaption>${escapeHtml(block.caption)}</figcaption>` : ""}
           </figure>
         </section>
@@ -107,8 +107,8 @@ function renderBlock(block) {
       return `
         <section class="entry-block entry-block--video">
           <figure>
-            <video controls preload="metadata" playsinline ${block.poster ? `poster="${block.poster}"` : ""}>
-              <source src="${block.src}" />
+            <video controls preload="metadata" playsinline ${block.poster ? `poster="${escapeHtml(block.poster)}"` : ""}>
+              <source src="${escapeHtml(block.src || "")}" />
             </video>
             ${block.caption ? `<figcaption>${escapeHtml(block.caption)}</figcaption>` : ""}
           </figure>
@@ -131,7 +131,7 @@ function formatDate(dateStr) {
 }
 
 function escapeHtml(str = "") {
-  return str
+  return String(str)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
