@@ -38,11 +38,8 @@
       font-weight: 500;
     }
 
-    .muted {
-      color: var(--muted);
-    }
+    .muted { color: var(--muted); }
 
-    .topbar,
     .login-panel,
     .filters,
     .card {
@@ -51,17 +48,10 @@
       border-radius: 16px;
     }
 
-    .topbar,
     .login-panel,
     .filters {
       padding: 1rem 1.1rem;
       margin-bottom: 1rem;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.9rem;
     }
 
     .row-3 {
@@ -71,9 +61,7 @@
     }
 
     @media (max-width: 900px) {
-      .row, .row-3 {
-        grid-template-columns: 1fr;
-      }
+      .row-3 { grid-template-columns: 1fr; }
     }
 
     label {
@@ -82,8 +70,6 @@
       margin-bottom: 0.4rem;
     }
 
-    input[type="email"],
-    input[type="password"],
     input[type="text"],
     textarea,
     select {
@@ -140,9 +126,7 @@
       margin-top: 1rem;
     }
 
-    .card {
-      overflow: hidden;
-    }
+    .card { overflow: hidden; }
 
     .card-inner {
       display: grid;
@@ -151,9 +135,7 @@
     }
 
     @media (max-width: 900px) {
-      .card-inner {
-        grid-template-columns: 1fr;
-      }
+      .card-inner { grid-template-columns: 1fr; }
     }
 
     .thumb {
@@ -179,9 +161,7 @@
       object-fit: cover;
     }
 
-    .editor {
-      padding: 1rem;
-    }
+    .editor { padding: 1rem; }
 
     .meta {
       display: flex;
@@ -246,20 +226,9 @@
     <p class="muted">Admin view for reviewing and curating submissions.</p>
 
     <section class="login-panel">
-      <div class="row">
-        <div>
-          <label for="email">Admin email</label>
-          <input id="email" type="email" autocomplete="username" />
-        </div>
-        <div>
-          <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="current-password" />
-        </div>
-      </div>
-
       <div class="btns">
-        <button id="loginBtn">Sign in</button>
-        <button id="logoutBtn">Sign out</button>
+        <button id="loginBtn">Login with Google</button>
+        <button id="logoutBtn">Logout</button>
         <button id="checkBtn">Check admin claim</button>
         <button id="loadBtn">Load submissions</button>
       </div>
@@ -309,7 +278,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
       getAuth,
-      signInWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
       signOut,
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -336,10 +306,9 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
     const db = getFirestore(app);
 
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const checkBtn = document.getElementById("checkBtn");
@@ -379,9 +348,7 @@
     function formatDate(value) {
       if (!value) return "—";
       try {
-        if (typeof value.toDate === "function") {
-          return value.toDate().toLocaleString();
-        }
+        if (typeof value.toDate === "function") return value.toDate().toLocaleString();
         return new Date(value).toLocaleString();
       } catch {
         return "—";
@@ -401,26 +368,21 @@
 
     async function requireAdmin() {
       const user = auth.currentUser;
-      if (!user) {
-        throw new Error("No signed-in user.");
-      }
+      if (!user) throw new Error("No signed-in user.");
+
       const claims = await refreshAdminClaims();
       if (!claims || claims.admin !== true) {
         throw new Error("Signed in, but admin claim is missing.");
       }
+
       return user;
     }
 
     async function signIn() {
       try {
-        const email = emailEl.value.trim();
-        const password = passwordEl.value;
-        if (!email || !password) {
-          setAuthStatus("Enter email and password first.", "warn");
-          return;
-        }
+        setAuthStatus("Signing in with Google…");
 
-        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const cred = await signInWithPopup(auth, provider);
         const claims = await refreshAdminClaims();
 
         if (claims?.admin === true) {
@@ -454,7 +416,9 @@
           setAuthStatus("No user signed in.", "warn");
           return;
         }
+
         const claims = await refreshAdminClaims();
+
         setAuthStatus(
           `Signed in as ${user.email}\nClaims: ${JSON.stringify(claims, null, 2)}`,
           claims?.admin === true ? "ok" : "warn"
@@ -468,7 +432,9 @@
     async function loadSubmissions() {
       try {
         await requireAdmin();
+
         setListStatus("Loading submissions…");
+
         const q = query(collection(db, "traces_submissions"), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
 
@@ -492,15 +458,10 @@
 
       let items = [...allSubmissions];
 
-      if (filter === "uncurated") {
-        items = items.filter(item => item.isCurated !== true);
-      } else if (filter === "curated") {
-        items = items.filter(item => item.isCurated === true);
-      } else if (filter === "published") {
-        items = items.filter(item => item.isPublished === true);
-      } else if (filter === "archived") {
-        items = items.filter(item => item.isArchived === true);
-      }
+      if (filter === "uncurated") items = items.filter(item => item.isCurated !== true);
+      else if (filter === "curated") items = items.filter(item => item.isCurated === true);
+      else if (filter === "published") items = items.filter(item => item.isPublished === true);
+      else if (filter === "archived") items = items.filter(item => item.isArchived === true);
 
       if (search) {
         items = items.filter(item => {
@@ -511,24 +472,17 @@
             item.slug,
             item.qrUrl
           ].join(" ").toLowerCase();
+
           return blob.includes(search);
         });
       }
 
       if (sort === "oldest") {
-        items.sort((a, b) => {
-          const at = a.createdAt?.seconds || 0;
-          const bt = b.createdAt?.seconds || 0;
-          return at - bt;
-        });
+        items.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
       } else if (sort === "name") {
         items.sort((a, b) => (a.participantName || "").localeCompare(b.participantName || ""));
       } else {
-        items.sort((a, b) => {
-          const at = a.createdAt?.seconds || 0;
-          const bt = b.createdAt?.seconds || 0;
-          return bt - at;
-        });
+        items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       }
 
       return items;
@@ -571,7 +525,7 @@
                   ${item.isArchived === true ? `<span class="badge">Archived</span>` : ``}
                 </div>
 
-                <div class="row">
+                <div class="row-3">
                   <div>
                     <label>Name or pseudonym</label>
                     <input type="text" class="field-participantName" value="${safeParticipantName}" maxlength="80" />
@@ -580,16 +534,15 @@
                     <label>Image title</label>
                     <input type="text" class="field-imageTitle" value="${safeImageTitle}" maxlength="120" />
                   </div>
+                  <div>
+                    <label>QR URL</label>
+                    <input type="text" class="field-qrUrl" value="${safeQrUrl}" />
+                  </div>
                 </div>
 
                 <div style="margin-top:0.9rem;">
                   <label>Sentence</label>
                   <textarea class="field-sentence" maxlength="120">${safeSentence}</textarea>
-                </div>
-
-                <div style="margin-top:0.9rem;">
-                  <label>QR URL</label>
-                  <input type="text" class="field-qrUrl" value="${safeQrUrl}" />
                 </div>
 
                 <div style="margin-top:0.9rem;">
@@ -620,6 +573,7 @@
     function attachCardHandlers() {
       cardsEl.querySelectorAll(".card").forEach(card => {
         const saveBtn = card.querySelector(".saveBtn");
+
         saveBtn.addEventListener("click", async () => {
           const id = card.dataset.id;
           const participantName = card.querySelector(".field-participantName").value.trim();
@@ -673,9 +627,7 @@
             await updateDoc(doc(db, "traces_submissions", id), updateData);
 
             const item = allSubmissions.find(x => x.id === id);
-            if (item) {
-              Object.assign(item, updateData);
-            }
+            if (item) Object.assign(item, updateData);
 
             itemStatus.textContent = "Saved.";
             itemStatus.className = "small item-status ok";
@@ -697,6 +649,7 @@
 
       try {
         const claims = await refreshAdminClaims();
+
         if (claims?.admin === true) {
           setAuthStatus(`Signed in as ${user.email}. Admin claim OK.`, "ok");
         } else {
