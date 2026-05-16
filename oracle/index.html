@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Forgetting Oracle</title>
+<style>
+html, body {
+  margin: 0;
+  background: #050505;
+  color: #d8d8d8;
+  font-family: "Courier New", monospace;
+  height: 100%;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+main {
+  width: 90%;
+  max-width: 760px;
+  text-align: center;
+}
+h1 {
+  font-size: 1rem;
+  letter-spacing: .2em;
+  color: #888;
+  font-weight: normal;
+}
+#text {
+  margin: 2rem 0;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  text-shadow: 0 0 12px rgba(255,255,255,.25);
+}
+pre {
+  display: inline-block;
+  text-align: left;
+  font-size: 9px;
+  line-height: 9px;
+  color: #d8ffd8;
+  text-shadow: 0 0 8px rgba(120,255,120,.35);
+  animation: pulse 5s infinite alternate;
+}
+button {
+  margin-top: 2rem;
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #444;
+  padding: .7rem 1rem;
+  font-family: inherit;
+}
+@keyframes pulse {
+  from { opacity: .45; }
+  to { opacity: 1; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>THE FORGETTING ORACLE</h1>
+
+  <div id="text"></div>
+
+  <pre id="qr">loading trace...</pre>
+
+  <br>
+  <button onclick="newTrace()">another trace</button>
+</main>
+
+<script>
+const fragments = [
+`A memory does not return.
+It rearranges itself.`,
+
+`You found a door,
+but not the room behind it.`,
+
+`The machine remembers
+only what has already begun to disappear.`,
+
+`Look again.
+The trace has moved.`,
+
+`This was here
+before you scanned it.`
+];
+
+function newTrace() {
+  document.getElementById("text").textContent =
+    fragments[Math.floor(Math.random() * fragments.length)];
+}
+
+newTrace();
+
+fetch("qr.txt")
+  .then(r => r.text())
+  .then(t => document.getElementById("qr").textContent = t);
+</script>
+</body>
+</html>
