@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>TRACES BETWEEN</title>
+
+<style>
+    :root{
+        --bg:#0d0d0d;
+        --text:#e8e8e8;
+        --muted:#8d8d8d;
+        --line:#242424;
+        --hover:#d7c7a3;
+    }
+
+    *{
+        box-sizing:border-box;
+    }
+
+    html,
+    body{
+        margin:0;
+        padding:0;
+        background:var(--bg);
+        color:var(--text);
+        font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+        min-height:100%;
+    }
+
+    body{
+        display:flex;
+        justify-content:center;
+        align-items:flex-start;
+        padding:8vh 24px;
+        line-height:1.6;
+        overflow-x:hidden;
+    }
+
+    .container{
+        width:100%;
+        max-width:720px;
+    }
+
+    h1{
+        margin:0;
+        font-size:clamp(2.2rem,5vw,4rem);
+        font-weight:500;
+        letter-spacing:0.04em;
+    }
+
+    .subtitle{
+        margin-top:18px;
+        margin-bottom:70px;
+        color:var(--muted);
+        font-size:1rem;
+        max-width:520px;
+    }
+
+    .section{
+        margin-bottom:42px;
+    }
+
+    .section-title{
+        color:var(--muted);
+        font-size:0.78rem;
+        letter-spacing:0.18em;
+        text-transform:uppercase;
+        margin-bottom:18px;
+    }
+
+    .links{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    a{
+        color:var(--text);
+        text-decoration:none;
+        border-bottom:1px solid transparent;
+        transition:
+            color 0.25s ease,
+            border-color 0.25s ease,
+            transform 0.25s ease;
+        display:inline-block;
+        width:fit-content;
+    }
+
+    a:hover{
+        color:var(--hover);
+        border-color:var(--hover);
+        transform:translateX(4px);
+    }
+
+    .small{
+        color:var(--muted);
+        font-size:0.92rem;
+    }
+
+    .footer{
+        margin-top:90px;
+        padding-top:24px;
+        border-top:1px solid var(--line);
+        color:var(--muted);
+        font-size:0.8rem;
+        letter-spacing:0.04em;
+    }
+
+    .noise{
+        position:fixed;
+        inset:0;
+        pointer-events:none;
+        opacity:0.03;
+        background-image:
+            repeating-radial-gradient(circle at 0 0,
+            #fff 0,
+            transparent 1px);
+        background-size:4px 4px;
+        mix-blend-mode:soft-light;
+    }
+
+    @media (max-width:600px){
+
+        body{
+            padding:6vh 22px;
+        }
+
+        .subtitle{
+            margin-bottom:50px;
+        }
+
+        a:hover{
+            transform:none;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="noise"></div>
+
+<div class="container">
+
+    <h1>TRACES BETWEEN</h1>
+
+    <div class="subtitle">
+        Between photography, memory, networks and passing observation.
+    </div>
+
+    <div class="section">
+        <div class="section-title">Main</div>
+
+        <div class="links">
+            <a href="https://photodiary.gallery" target="_blank">
+                photodiary.gallery
+            </a>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Traces / Experiments</div>
+
+        <div class="links">
+
+            <a href="https://photodiary.gallery/experiment/" target="_blank">
+                Experiment
+            </a>
+
+            <a href="https://photodiarygame.com/cradle/" target="_blank">
+                Cradle
+            </a>
+
+            <a href="https://photopoetry.xyz/AI/index4.html" target="_blank">
+                AI Experiments
+            </a>
+
+            <a href="https://photodiary.gallery/traces/gallery/" target="_blank">
+                Traces Gallery
+            </a>
+
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">NFT / Blockchain</div>
+
+        <div class="links">
+
+            <a href="https://objkt.com/users/tz1hXLcLSSG9seFWzKakZrMcCxBQxZEjp6NB/created" target="_blank">
+                OBJKT — Created Works
+            </a>
+
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Education</div>
+
+        <div class="links">
+
+            <a href="https://photodiary.guru" target="_blank">
+                photodiary.guru
+            </a>
+
+            <div class="small">
+                (in Finnish)
+            </div>
+
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Elsewhere</div>
+
+        <div class="links">
+
+            <a href="https://instagram.com/arzarzarz" target="_blank">
+                Instagram — arzarzarz
+            </a>
+
+            <a href="https://instagram.com/artpunktum" target="_blank">
+                Instagram — artpunktum
+            </a>
+
+            <a href="https://bsky.app/profile/arzarzarz.bsky.social" target="_blank">
+                Bluesky — @arzarzarz.bsky.social
+            </a>
+
+        </div>
+    </div>
+
+    <div class="footer">
+        000
+    </div>
+
+</div>
+
+</body>
+</html>
