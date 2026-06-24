@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Traces Between — Memory Oracle</title>
+
+<style>
+:root {
+  --bg: #0e0e0c;
+  --panel: #171713;
+  --text: #e9e2d0;
+  --muted: #9d9587;
+  --line: rgba(233,226,208,0.16);
+  --accent: #c9a85f;
+  --red: rgba(220, 32, 32, 0.88);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(201,168,95,0.10), transparent 34%),
+    linear-gradient(to bottom, #11110f, var(--bg));
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  display: flex;
+  justify-content: center;
+}
+
+#redSpot {
+  position: fixed;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 22px rgba(220, 32, 32, 0.65);
+  z-index: 20;
+  cursor: pointer;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+#redSpot:hover {
+  transform: scale(1.25);
+}
+
+main {
+  width: 100%;
+  max-width: 760px;
+  min-height: 100vh;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  padding: 18px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+#chat {
+  flex: 1;
+  padding: 24px 0;
+  overflow-y: auto;
+}
+
+.msg {
+  max-width: 88%;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  line-height: 1.55;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.025);
+  border-radius: 18px;
+  animation: fadeIn 0.45s ease;
+  white-space: pre-wrap;
+  font-size: 0.98rem;
+}
+
+.oracle {
+  margin-right: auto;
+  border-top-left-radius: 4px;
+}
+
+.user {
+  margin-left: auto;
+  background: rgba(201,168,95,0.08);
+  border-color: rgba(201,168,95,0.26);
+  border-top-right-radius: 4px;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--line);
+}
+
+input {
+  flex: 1;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 14px 16px;
+  font-size: 1rem;
+  outline: none;
+  font-family: inherit;
+}
+
+input:focus {
+  border-color: rgba(201,168,95,0.55);
+}
+
+button {
+  background: var(--accent);
+  color: #18150f;
+  border: none;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+button:disabled,
+input:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+  margin: 10px 0 4px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 520px) {
+  main { padding: 16px; }
+  .msg { max-width: 95%; }
+  h1 { font-size: 1rem; }
+  button { padding: 0 15px; }
+}
+</style>
+</head>
+
+<body>
+<div id="redSpot" title="A memory prompt"></div>
+
+<main>
+  <header>
+    <h1>Traces Between — Memory Oracle</h1>
+    <div class="subtitle">
+      Kirjoita sana, muisto, paikka, esine, tunne tai unohtunut asia.
+      Punainen piste voi avata uuden kysymyksen.
+    </div>
+  </header>
+
+  <section id="chat"></section>
+
+  <form id="form">
+    <input id="input" autocomplete="off" placeholder="Kirjoita jälki..." />
+    <button id="sendButton">Lähetä</button>
+  </form>
+
+  <div class="note">Nothing is stored. The trace disappears when you leave.</div>
+</main>
+
+<script>
+const chat = document.getElementById("chat");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const sendButton = document.getElementById("sendButton");
+const redSpot = document.getElementById("redSpot");
+
+let memoryOracle = null;
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function addMessage(text, type) {
+  const div = document.createElement("div");
+  div.className = `msg ${type}`;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function moveRedSpot() {
+  const margin = 44;
+  const x = margin + Math.random() * Math.max(1, window.innerWidth - margin * 2);
+  const y = margin + Math.random() * Math.max(1, window.innerHeight - margin * 2);
+
+  redSpot.style.left = `${x}px`;
+  redSpot.style.top = `${y}px`;
+}
+
+function randomOpeningPrompt() {
+  const prompt = pick(memoryOracle.prompts);
+  const trace = pick(memoryOracle.traceWords);
+
+  const openings = [
+    `Punainen piste pysähtyy tähän.\n\n${prompt}`,
+    `Tässä kohdassa on pieni ${trace}.\n\n${prompt}`,
+    `Oraakkeli ei aloita vastauksella vaan kysymyksellä.\n\n${prompt}`,
+    `Katso hetki tätä pistettä.\n\n${prompt}`,
+    `Jokin muistin reunalla välähtää.\n\n${prompt}`,
+    `Tämä ei ole vielä vastaus. Se on kutsu.\n\n${prompt}`
+  ];
+
+  return pick(openings);
+}
+
+function findMatchingCategories(text) {
+  const lower = text.toLowerCase();
+
+  return memoryOracle.categories.filter(category =>
+    category.triggers.some(trigger => lower.includes(trigger.toLowerCase()))
+  );
+}
+
+function oracleReply(text) {
+  const matches = findMatchingCategories(text);
+  const category = matches.length ? pick(matches) : null;
+
+  const opening = category
+    ? pick(category.responses)
+    : pick(memoryOracle.generalOpenings);
+
+  const trace = pick(memoryOracle.traceWords);
+  const prompt = pick(memoryOracle.prompts);
+  const challenge = pick(memoryOracle.softChallenges);
+
+  const patterns = [
+    `${opening}\n\nEhkä tässä näkyy ${trace}. ${prompt}`,
+    `${opening}\n\nPysy hetki tämän äärellä. ${prompt}`,
+    `${opening}\n\nTraces Between tunnistaa tässä pienen kohdan: ${trace}. ${prompt}`,
+    `${opening}\n\nÄlä ratkaise sitä vielä. ${challenge}`,
+    `${opening}\n\nJos tämä on ${trace}, mitä se pyytää sinua muistamaan?`,
+    `${opening}\n\n${prompt} ${challenge}`
+  ];
+
+  return pick(patterns);
+}
+
+async function loadOracle() {
+  try {
+    const response = await fetch("memory-oracle.json");
+
+    if (!response.ok) {
+      throw new Error("JSON file not found");
+    }
+
+    memoryOracle = await response.json();
+
+    moveRedSpot();
+
+    addMessage(
+      randomOpeningPrompt(),
+      "oracle"
+    );
+
+  } catch (error) {
+    redSpot.style.display = "none";
+
+    addMessage(
+      "Oraakkelin sanasto ei latautunut. Tarkista, että memory-oracle.json on samassa kansiossa ja että se on oikeaa JSON-muotoa.",
+      "oracle"
+    );
+
+    input.disabled = true;
+    sendButton.disabled = true;
+  }
+}
+
+form.addEventListener("submit", event => {
+  event.preventDefault();
+
+  if (!memoryOracle) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+
+  moveRedSpot();
+
+  setTimeout(() => {
+    addMessage(oracleReply(text), "oracle");
+  }, 550 + Math.random() * 850);
+});
+
+redSpot.addEventListener("click", () => {
+  if (!memoryOracle) return;
+
+  moveRedSpot();
+  addMessage(randomOpeningPrompt(), "oracle");
+});
+
+window.addEventListener("resize", moveRedSpot);
+
+loadOracle();
+</script>
+</body>
+</html>
