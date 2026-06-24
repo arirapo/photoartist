@@ -1,0 +1,175 @@
+const memoryOracle = {
+  generalOpenings: [
+    "Tuo on pieni jälki.",
+    "Muisti vastaa usein sivupolun kautta.",
+    "Älä kiirehdi muistoon. Anna sen lähestyä itse.",
+    "Ehkä tämä ei ole muisto vaan sen varjo.",
+    "Jokin tässä liikkuu kuvan ja unohtamisen välissä.",
+    "Tämä kuulostaa asialta, joka ei halua tulla kokonaan näkyviin.",
+    "Pidä tästä kiinni vain kevyesti.",
+    "Muisto ei ehkä ole vielä valmis puhumaan suoraan.",
+    "Tämä on kuin kuva, jonka reunat ovat vasta muodostumassa.",
+    "Ehkä tärkeintä ei ole se, mitä muistat, vaan mistä suunnasta se palaa."
+  ],
+
+  traceWords: [
+    "jälki",
+    "välitila",
+    "kuva-aukko",
+    "punainen piste",
+    "hidas kuva",
+    "muistin reuna",
+    "unohtamisen pinta",
+    "cameo",
+    "hiljainen kohta",
+    "melkein kadonnut kuva",
+    "valon jäännös",
+    "katseen viive",
+    "muistin eteinen",
+    "arkinen reliikki",
+    "puuttuva ruutu",
+    "varjossa oleva yksityiskohta",
+    "epävarma todistus",
+    "sisäinen albumi",
+    "kuvitteellinen negatiivi",
+    "pieni paluu"
+  ],
+
+  prompts: [
+    "Mikä yksityiskohta jää jäljelle, jos muu katoaa?",
+    "Missä kohtaa kuva alkaa hajota?",
+    "Mitä tämä muisto ei suostu näyttämään?",
+    "Kuka tai mikä jää kuvan ulkopuolelle?",
+    "Mitä punainen piste merkitsisi tässä muistossa?",
+    "Minkä äänen tämä jälki voisi antaa?",
+    "Mikä tässä tuntuu todelta, vaikka et voi todistaa sitä?",
+    "Mikä tästä kuuluisi unohtamiselle?",
+    "Jos tämä olisi valokuva, mistä kohtaa se olisi ylivalottunut?",
+    "Mihin aikaan päivästä tämä muisto kuuluu?",
+    "Mikä esine voisi kantaa tätä muistoa?",
+    "Mitä tapahtui juuri ennen tätä?",
+    "Mitä tapahtui heti tämän jälkeen?",
+    "Mikä tässä muistossa on liian kirkasta?",
+    "Mikä tässä on jäänyt pimeäksi?",
+    "Mitä et halua muistaa, mutta et myöskään kadottaa?",
+    "Miltä tämä muisto tuntuisi kädessä?",
+    "Jos tämä olisi huone, missä kohtaa seisoisit?",
+    "Mikä tässä on sinun cameo-roolisi?",
+    "Mikä tästä jäisi jäljelle ilman sanoja?"
+  ],
+
+  softChallenges: [
+    "Kirjoita seuraavaksi vain yksi esine.",
+    "Vastaa yhdellä värillä.",
+    "Kirjoita paikka, mutta älä selitä sitä.",
+    "Kirjoita vain ääni, joka liittyy tähän.",
+    "Valitse yksi henkilö kuvan ulkopuolelta.",
+    "Kirjoita asia, jonka melkein unohdit.",
+    "Kirjoita seuraava sana hitaammin kuin tavallisesti.",
+    "Ajattele tätä valokuvana, jota kukaan muu ei näe.",
+    "Anna muistolle väärä nimi.",
+    "Kirjoita se kohta, josta et ole varma."
+  ],
+
+  categories: [
+    {
+      name: "lapsuus",
+      triggers: ["lapsi", "lapsuus", "koulu", "äiti", "isä", "mummo", "vaari", "piha", "leikki", "koti"],
+      responses: [
+        "Lapsuuden muistot palaavat usein lattian, oven, hajun tai valon muodossa.",
+        "Lapsuus ei tule takaisin kokonaisena. Se lähettää pieniä esineitä edellään.",
+        "Ehkä muistat vain paikan, jossa olit pieni, mutta se riittää.",
+        "Lapsuuden kuva on usein matalalta katsottu kuva.",
+        "Jotkin lapsuuden muistot ovat suurempia kuin niiden tapahtumat."
+      ]
+    },
+    {
+      name: "unohtaminen",
+      triggers: ["unohtu", "unohdin", "en muista", "kadonnut", "hävisi", "hämärä", "aukko"],
+      responses: [
+        "Unohtaminen ei ole tyhjää. Se on muistin toinen huone.",
+        "Kadonnut muisto ei ehkä ole poissa, vaan kääntynyt poispäin.",
+        "Jos et muista, voit silti tunnistaa jäljen jonka unohtaminen jätti.",
+        "Muistin aukko voi olla myös suoja.",
+        "Ehkä unohtaminen pitää tätä kuvaa hengissä."
+      ]
+    },
+    {
+      name: "valokuva",
+      triggers: ["kuva", "valokuva", "kamera", "valo", "negatiivi", "pimiö", "albumi", "linssi"],
+      responses: [
+        "Valokuva näyttää yhden pinnan ja piilottaa monta muuta.",
+        "Kuva ei säilytä hetkeä. Se säilyttää jäljen siitä, että katsoit.",
+        "Ehkä tämä muisto on kuva, jota ei koskaan otettu.",
+        "Kamera ei kysy lupaa muistolta.",
+        "Jokainen kuva on myös pois rajattu maailma."
+      ]
+    },
+    {
+      name: "paikka",
+      triggers: ["paikka", "huone", "talo", "tie", "metsä", "ranta", "kaupunki", "asema", "piha"],
+      responses: [
+        "Paikat muistavat eri tavalla kuin ihmiset.",
+        "Jotkin paikat säilyttävät meistä version, joka ei enää palaa.",
+        "Ehkä paikka ei ole tausta vaan muistamisen varsinainen henkilö.",
+        "Kävele mielessäsi tämän paikan läpi hitaasti.",
+        "Mikä kohta tässä paikassa on edelleen sinun?"
+      ]
+    },
+    {
+      name: "esine",
+      triggers: ["esine", "kirja", "kello", "avain", "laatikko", "vaate", "kenkä", "pöytä", "tuoli"],
+      responses: [
+        "Esineet kantavat muistia ilman että ne kertovat siitä.",
+        "Tämä voisi olla pieni arkinen reliikki.",
+        "Joskus esine muistaa paremmin kuin ihminen.",
+        "Pidä tätä esinettä mielessäsi kuin todistetta.",
+        "Mitä tämä esine tietäisi, jos se voisi vastata?"
+      ]
+    },
+    {
+      name: "keho",
+      triggers: ["keho", "ruumis", "käsi", "jalka", "sydän", "hengitys", "kipu", "iho"],
+      responses: [
+        "Keho muistaa usein ennen sanoja.",
+        "Ehkä tämä muisto ei ole kuvassa vaan asennossa.",
+        "Jokin tässä on tallentunut hengitykseen.",
+        "Keho ei arkistoi järjestyksessä.",
+        "Tunnista kohta, jossa tämä muisto tuntuu."
+      ]
+    },
+    {
+      name: "ääni",
+      triggers: ["ääni", "musiikki", "puhe", "hiljaisuus", "melu", "nauru", "itku", "kuiskaus"],
+      responses: [
+        "Ääni voi palauttaa oven, jota kuva ei löydä.",
+        "Hiljaisuuskin voi olla muistijälki.",
+        "Kuuntele tätä kuin vanhaa nauhoitetta.",
+        "Mikä ääni katosi ensimmäisenä?",
+        "Ehkä muisto alkaa vasta siitä, mitä ei enää kuulu."
+      ]
+    },
+    {
+      name: "suru",
+      triggers: ["suru", "kuolema", "menetin", "ikävä", "kaipaus", "hauta", "poissa"],
+      responses: [
+        "Jotkut muistot tulevat lähelle hyvin hiljaa.",
+        "Voit pysyä vain reunalla. Sekin on muistamista.",
+        "Kaipaus tekee muistosta joskus liian kirkkaan.",
+        "Poissaolo voi olla kuvan voimakkain kohta.",
+        "Tämän muiston äärellä ei tarvitse suorittaa mitään."
+      ]
+    },
+    {
+      name: "viimeaikaisuus",
+      triggers: ["tänään", "eilen", "aamu", "ilta", "viime", "äsken", "nyt"],
+      responses: [
+        "Viimeaikainen muisto ei ole vielä asettunut.",
+        "Tämä on vielä enemmän jälki kuin muisto.",
+        "Ehkä tämä hetki muuttuu muistoksi vasta myöhemmin.",
+        "Tuore muisto on vielä lämmin ja epätarkka.",
+        "Katso tätä kuin kuvaa, joka ei ole vielä kuivunut."
+      ]
+    }
+  ]
+};
