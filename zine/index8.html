@@ -470,6 +470,20 @@ async function downloadPDF() {
     drawCropMarks(ctx, canvas.width, canvas.height);
   }
 
+const titleText = document.getElementById("zineTitle").value.trim();
+
+if (titleText) {
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.fillRect(canvas.width / 2 - 260, canvas.height - 62, 520, 42);
+
+  ctx.fillStyle = "#333";
+  ctx.font = "28px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(titleText, canvas.width / 2, canvas.height - 32);
+  ctx.restore();
+}
+  
   const imgData = canvas.toDataURL("image/jpeg", 0.92);
   pdf.addImage(imgData, "JPEG", 0, 0, 297, 210);
 
