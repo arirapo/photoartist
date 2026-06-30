@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<title>Photodiary Zine Maker 5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #111;
+  color: #eee;
+  margin: 0;
+  padding: 24px;
+}
+
+h1 { font-weight: 400; }
+
+.controls {
+  max-width: 900px;
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+input, button {
+  margin: 6px 0 10px;
+  display: block;
+}
+
+button {
+  padding: 10px 18px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  width: 297mm;
+  height: 210mm;
+  background: white;
+  color: black;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.page {
+  position: relative;
+  border: 0.2mm solid #aaa;
+  overflow: hidden;
+  background: #f8f8f8;
+}
+
+.page img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 4mm;
+  right: 5mm;
+  font-size: 10pt;
+  background: rgba(255,255,255,0.7);
+  padding: 1mm 2mm;
+  z-index: 2;
+}
+
+.rotate {
+  transform: rotate(180deg);
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 24pt;
+  color: #999;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Photodiary Zine Maker 5</h1>
+
+<p>
+Lisää 8 kuvaa. Luo sen jälkeen A4-vaaka-PDF ja avaa se uuteen välilehteen.
+</p>
+
+<div class="controls">
+  <label>Sivu 1 / kansi</label>
+  <input type="file" accept="image/*" data-page="1">
+
+  <label>Sivu 2</label>
+  <input type="file" accept="image/*" data-page="2">
+
+  <label>Sivu 3</label>
+  <input type="file" accept="image/*" data-page="3">
+
+  <label>Sivu 4</label>
+  <input type="file" accept="image/*" data-page="4">
+
+  <label>Sivu 5</label>
+  <input type="file" accept="image/*" data-page="5">
+
+  <label>Sivu 6</label>
+  <input type="file" accept="image/*" data-page="6">
+
+  <label>Sivu 7</label>
+  <input type="file" accept="image/*" data-page="7">
+
+  <label>Sivu 8 / takakansi</label>
+  <input type="file" accept="image/*" data-page="8">
+
+  <button onclick="downloadPDF()">Avaa A4 PDF</button>
+</div>
+
+<div class="preview" id="zine">
+
+  <div class="page rotate" data-slot="8"><div class="placeholder">8</div><div class="page-number">8</div></div>
+  <div class="page rotate" data-slot="1"><div class="placeholder">1</div><div class="page-number">1</div></div>
+  <div class="page rotate" data-slot="2"><div class="placeholder">2</div><div class="page-number">2</div></div>
+  <div class="page rotate" data-slot="7"><div class="placeholder">7</div><div class="page-number">7</div></div>
+
+  <div class="page" data-slot="6"><div class="placeholder">6</div><div class="page-number">6</div></div>
+  <div class="page" data-slot="3"><div class="placeholder">3</div><div class="page-number">3</div></div>
+  <div class="page" data-slot="4"><div class="placeholder">4</div><div class="page-number">4</div></div>
+  <div class="page" data-slot="5"><div class="placeholder">5</div><div class="page-number">5</div></div>
+
+</div>
+
+<script>
+const images = {};
+const inputs = document.querySelectorAll('input[type="file"]');
+
+inputs.forEach(input => {
+  input.addEventListener('change', event => {
+    const file = event.target.files[0];
+    const pageNumber = event.target.dataset.page;
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      images[pageNumber] = e.target.result;
+
+      const page = document.querySelector(`.page[data-slot="${pageNumber}"]`);
+      page.innerHTML = "";
+
+      const img = document.createElement("img");
+      img.src = e.target.result;
+
+      const number = document.createElement("div");
+      number.className = "page-number";
+      number.textContent = pageNumber;
+
+      page.appendChild(img);
+      page.appendChild(number);
+    };
+
+    reader.readAsDataURL(file);
+  });
+});
+
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height;
+  const boxRatio = w / h;
+
+  let drawW, drawH, offsetX, offsetY;
+
+  if (imgRatio > boxRatio) {
+    drawH = h;
+    drawW = h * imgRatio;
+    offsetX = x - (drawW - w) / 2;
+    offsetY = y;
+  } else {
+    drawW = w;
+    drawH = w / imgRatio;
+    offsetX = x;
+    offsetY = y - (drawH - h) / 2;
+  }
+
+  ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+}
+
+function loadImage(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.src = src;
+  });
+}
+
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4"
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 3508;
+  canvas.height = 2480;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const pageW = canvas.width / 4;
+  const pageH = canvas.height / 2;
+
+  const layout = [
+    { page: "8", x: 0, y: 0, rotate: true },
+    { page: "1", x: 1, y: 0, rotate: true },
+    { page: "2", x: 2, y: 0, rotate: true },
+    { page: "7", x: 3, y: 0, rotate: true },
+    { page: "6", x: 0, y: 1, rotate: false },
+    { page: "3", x: 1, y: 1, rotate: false },
+    { page: "4", x: 2, y: 1, rotate: false },
+    { page: "5", x: 3, y: 1, rotate: false }
+  ];
+
+  for (const item of layout) {
+    const x = item.x * pageW;
+    const y = item.y * pageH;
+
+    ctx.save();
+
+    if (item.rotate) {
+      ctx.translate(x + pageW / 2, y + pageH / 2);
+      ctx.rotate(Math.PI);
+      ctx.translate(-pageW / 2, -pageH / 2);
+    } else {
+      ctx.translate(x, y);
+    }
+
+    ctx.fillStyle = "#f8f8f8";
+    ctx.fillRect(0, 0, pageW, pageH);
+
+    if (images[item.page]) {
+      const img = await loadImage(images[item.page]);
+      drawImageCover(ctx, img, 0, 0, pageW, pageH);
+    }
+
+    ctx.strokeStyle = "#999";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, pageW, pageH);
+
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.fillRect(pageW - 95, pageH - 80, 50, 42);
+
+    ctx.fillStyle = "#333";
+    ctx.font = "32px sans-serif";
+    ctx.fillText(item.page, pageW - 78, pageH - 50);
+
+    ctx.restore();
+  }
+
+  const imgData = canvas.toDataURL("image/jpeg", 0.95);
+  pdf.addImage(imgData, "JPEG", 0, 0, 297, 210);
+
+  const blob = pdf.output("blob");
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+
+</body>
+</html>
