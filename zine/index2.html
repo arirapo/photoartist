@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<title>Photodiary Zine Maker 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #111;
+  color: #eee;
+  padding: 24px;
+}
+
+h1 {
+  font-weight: 400;
+}
+
+.controls {
+  max-width: 900px;
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+input, button {
+  margin: 6px 0 10px;
+  display: block;
+}
+
+button {
+  padding: 10px 18px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Näyttöesikatselu: hieman pienempi kuin täysi A4,
+   jotta tulostimet eivät jaa sivua kahdeksi */
+.preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+
+  width: 285mm;
+  height: 200mm;
+
+  background: white;
+  color: black;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.page {
+  position: relative;
+  border: 0.2mm solid #aaa;
+  overflow: hidden;
+  background: #f8f8f8;
+}
+
+.page img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 4mm;
+  right: 5mm;
+  font-size: 10pt;
+  background: rgba(255,255,255,0.7);
+  padding: 1mm 2mm;
+  z-index: 2;
+}
+
+.rotate {
+  transform: rotate(180deg);
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 24pt;
+  color: #999;
+}
+
+/* Tulostus */
+@media print {
+  html, body {
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  h1,
+  p,
+  .controls {
+    display: none;
+  }
+
+  .preview {
+    width: 285mm;
+    height: 200mm;
+    margin: 5mm auto 0 auto;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Photodiary Zine Maker</h1>
+
+<p>
+Lisää 8 kuvaa. Ohjelma asettelee ne yhdelle A4-arkille
+minizine-tulostusta varten.
+</p>
+
+<div class="controls">
+  <label>Sivu 1 / kansi</label>
+  <input type="file" accept="image/*" data-page="1">
+
+  <label>Sivu 2</label>
+  <input type="file" accept="image/*" data-page="2">
+
+  <label>Sivu 3</label>
+  <input type="file" accept="image/*" data-page="3">
+
+  <label>Sivu 4</label>
+  <input type="file" accept="image/*" data-page="4">
+
+  <label>Sivu 5</label>
+  <input type="file" accept="image/*" data-page="5">
+
+  <label>Sivu 6</label>
+  <input type="file" accept="image/*" data-page="6">
+
+  <label>Sivu 7</label>
+  <input type="file" accept="image/*" data-page="7">
+
+  <label>Sivu 8 / takakansi</label>
+  <input type="file" accept="image/*" data-page="8">
+
+  <button onclick="window.print()">Tulosta zine</button>
+</div>
+
+<div class="preview" id="zine">
+
+  <!-- Ylärivi: ylösalaisin taittelua varten -->
+  <div class="page rotate" data-slot="8">
+    <div class="placeholder">8</div>
+    <div class="page-number">8</div>
+  </div>
+
+  <div class="page rotate" data-slot="1">
+    <div class="placeholder">1</div>
+    <div class="page-number">1</div>
+  </div>
+
+  <div class="page rotate" data-slot="2">
+    <div class="placeholder">2</div>
+    <div class="page-number">2</div>
+  </div>
+
+  <div class="page rotate" data-slot="7">
+    <div class="placeholder">7</div>
+    <div class="page-number">7</div>
+  </div>
+
+  <!-- Alarivi -->
+  <div class="page" data-slot="6">
+    <div class="placeholder">6</div>
+    <div class="page-number">6</div>
+  </div>
+
+  <div class="page" data-slot="3">
+    <div class="placeholder">3</div>
+    <div class="page-number">3</div>
+  </div>
+
+  <div class="page" data-slot="4">
+    <div class="placeholder">4</div>
+    <div class="page-number">4</div>
+  </div>
+
+  <div class="page" data-slot="5">
+    <div class="placeholder">5</div>
+    <div class="page-number">5</div>
+  </div>
+
+</div>
+
+<script>
+const inputs = document.querySelectorAll('input[type="file"]');
+
+inputs.forEach(input => {
+  input.addEventListener('change', event => {
+    const file = event.target.files[0];
+    const pageNumber = event.target.dataset.page;
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      const page = document.querySelector(`.page[data-slot="${pageNumber}"]`);
+
+      page.innerHTML = "";
+
+      const img = document.createElement("img");
+      img.src = e.target.result;
+
+      const number = document.createElement("div");
+      number.className = "page-number";
+      number.textContent = pageNumber;
+
+      page.appendChild(img);
+      page.appendChild(number);
+    };
+
+    reader.readAsDataURL(file);
+  });
+});
+</script>
+
+</body>
+</html>
