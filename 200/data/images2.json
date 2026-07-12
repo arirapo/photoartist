@@ -1,0 +1,22 @@
+[
+  {
+    "number": 1,
+    "date": "2026-01-01",
+    "image": "images2/001.jpg"
+  },
+  {
+    "number": 2,
+    "date": "2026-01-02",
+    "image": "images2/002.jpg"
+  },
+  {
+    "number": 3,
+    "date": "2026-01-03",
+    "image": "images2/003.jpg"
+  },
+  {
+    "number": 4,
+    "date": "2026-01-04",
+    "image": "images2/004.jpg"
+  }
+]
