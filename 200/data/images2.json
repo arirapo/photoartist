@@ -717,543 +717,529 @@
     "number": 103,
     "date": "2026-04-17",
     "time": "08:41:39",
-    "image": "images/IMG_4601 2.jpeg",
-    "dateSource": "DateTime"
-  },
-  {
-    "number": 104,
-    "date": "2026-04-17",
-    "time": "08:41:39",
     "image": "images/IMG_4601.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 105,
+    "number": 104,
     "date": "2026-04-18",
     "time": "17:35:58",
     "image": "images/IMG_4629.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 106,
+    "number": 105,
     "date": "2026-04-19",
     "time": "13:07:40",
     "image": "images/IMG_4666.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 107,
+    "number": 106,
     "date": "2026-04-20",
     "time": "10:07:43",
     "image": "images/IMG_4699.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 108,
+    "number": 107,
     "date": "2026-04-21",
     "time": "16:34:27",
     "image": "images/IMG_4725.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 109,
+    "number": 108,
     "date": "2026-04-22",
     "time": "10:27:00",
     "image": "images/IMG_4751.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 110,
+    "number": 109,
     "date": "2026-04-23",
     "time": "12:49:19",
     "image": "images/IMG_4792.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 111,
+    "number": 110,
     "date": "2026-04-24",
     "time": "12:57:07",
     "image": "images/IMG_4837.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 112,
+    "number": 111,
     "date": "2026-04-25",
     "time": "11:06:43",
     "image": "images/IMG_4867.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 113,
+    "number": 112,
     "date": "2026-04-26",
     "time": "07:16:45",
     "image": "images/IMG_4888.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 114,
+    "number": 113,
     "date": "2026-04-27",
     "time": "10:12:35",
     "image": "images/IMG_4908.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 115,
+    "number": 114,
     "date": "2026-04-28",
     "time": "11:48:13",
     "image": "images/IMG_4921.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 116,
+    "number": 115,
     "date": "2026-04-29",
     "time": "09:46:27",
     "image": "images/IMG_4940.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 117,
+    "number": 116,
     "date": "2026-04-30",
     "time": "12:38:07",
     "image": "images/IMG_4953.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 118,
+    "number": 117,
     "date": "2026-05-01",
     "time": "08:42:36",
     "image": "images/IMG_4970.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 119,
+    "number": 118,
     "date": "2026-05-02",
     "time": "06:58:10",
     "image": "images/IMG_5015.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 120,
+    "number": 119,
     "date": "2026-05-03",
     "time": "10:58:08",
     "image": "images/IMG_5041.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 121,
+    "number": 120,
     "date": "2026-05-04",
     "time": "21:58:35",
     "image": "images/IMG_4094.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 122,
+    "number": 121,
     "date": "2026-05-05",
     "time": "09:22:53",
     "image": "images/IMG_4164.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 123,
+    "number": 122,
     "date": "2026-05-06",
     "time": "21:55:30",
     "image": "images/IMG_5113.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 124,
+    "number": 123,
     "date": "2026-05-07",
     "time": "09:35:21",
     "image": "images/IMG_5128.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 125,
+    "number": 124,
     "date": "2026-05-08",
     "time": "13:21:13",
     "image": "images/IMG_5174.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 126,
+    "number": 125,
     "date": "2026-05-09",
     "time": "12:28:22",
     "image": "images/IMG_5211.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 127,
+    "number": 126,
     "date": "2026-05-10",
     "time": "13:46:40",
     "image": "images/IMG_5252.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 128,
+    "number": 127,
     "date": "2026-05-11",
     "time": "09:55:10",
     "image": "images/IMG_5261.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 129,
+    "number": 128,
     "date": "2026-05-12",
     "time": "10:04:50",
     "image": "images/IMG_5279.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 130,
+    "number": 129,
     "date": "2026-05-13",
     "time": "09:45:36",
     "image": "images/IMG_5301.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 131,
+    "number": 130,
     "date": "2026-05-14",
     "time": "19:15:37",
     "image": "images/IMG_5352.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 132,
+    "number": 131,
     "date": "2026-05-15",
     "time": "07:55:12",
     "image": "images/IMG_6019.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 133,
+    "number": 132,
     "date": "2026-05-16",
     "time": "19:12:59",
     "image": "images/IMG_6090.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 134,
+    "number": 133,
     "date": "2026-05-17",
     "time": "13:38:10",
     "image": "images/IMG_6116.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 135,
+    "number": 134,
     "date": "2026-05-18",
     "time": "11:37:30",
     "image": "images/IMG_6135.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 136,
+    "number": 135,
     "date": "2026-05-20",
     "time": "11:22:58",
     "image": "images/IMG_6182.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 137,
+    "number": 136,
     "date": "2026-05-21",
     "time": "13:29:34",
     "image": "images/IMG_6193.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 138,
+    "number": 137,
     "date": "2026-05-22",
     "time": "09:44:55",
     "image": "images/IMG_5459.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 139,
+    "number": 138,
     "date": "2026-05-22",
     "time": "09:44:55",
     "image": "images/IMG_6230.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 140,
+    "number": 139,
     "date": "2026-05-23",
     "time": "07:34:58",
     "image": "images/IMG_6254.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 141,
+    "number": 140,
     "date": "2026-05-23",
     "time": "17:42:03",
     "image": "images/IMG_6265.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 142,
+    "number": 141,
     "date": "2026-05-24",
     "time": "10:35:40",
     "image": "images/IMG_6294.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 143,
+    "number": 142,
     "date": "2026-05-27",
     "time": "13:18:33",
     "image": "images/IMG_6357.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 144,
+    "number": 143,
     "date": "2026-05-28",
     "time": "09:14:34",
     "image": "images/IMG_6371.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 145,
+    "number": 144,
     "date": "2026-05-29",
     "time": "10:10:41",
     "image": "images/IMG_6386.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 146,
+    "number": 145,
     "date": "2026-05-30",
     "time": "12:22:51",
     "image": "images/IMG_6402.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 147,
+    "number": 146,
     "date": "2026-05-31",
     "time": "07:36:10",
     "image": "images/IMG_6429.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 148,
+    "number": 147,
     "date": "2026-06-01",
     "time": "10:41:16",
     "image": "images/IMG_6436.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 149,
+    "number": 148,
     "date": "2026-06-02",
     "time": "08:53:30",
     "image": "images/IMG_6447.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 150,
+    "number": 149,
     "date": "2026-06-03",
     "time": "09:02:42",
     "image": "images/IMG_6460.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 151,
+    "number": 150,
     "date": "2026-06-04",
     "time": "16:25:46",
     "image": "images/IMG_6478.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 152,
+    "number": 151,
     "date": "2026-06-05",
     "time": "08:26:42",
     "image": "images/IMG_6487.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 153,
+    "number": 152,
     "date": "2026-06-06",
     "time": "11:04:49",
     "image": "images/IMG_6500.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 154,
+    "number": 153,
     "date": "2026-06-07",
     "time": "12:32:12",
     "image": "images/IMG_6517.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 155,
+    "number": 154,
     "date": "2026-06-08",
     "time": "15:46:38",
     "image": "images/IMG_6551.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 156,
+    "number": 155,
     "date": "2026-06-09",
     "time": "11:57:36",
     "image": "images/IMG_6568.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 157,
+    "number": 156,
     "date": "2026-06-10",
     "time": "06:15:37",
     "image": "images/IMG_6593.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 158,
+    "number": 157,
     "date": "2026-06-11",
     "time": "11:38:58",
     "image": "images/IMG_6618.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 159,
-    "date": "2026-06-12",
-    "time": "16:11:17",
-    "image": "images/IMG_6642 2.jpeg",
-    "dateSource": "DateTime"
-  },
-  {
-    "number": 160,
+    "number": 158,
     "date": "2026-06-12",
     "time": "16:11:17",
     "image": "images/IMG_6642.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 161,
+    "number": 159,
     "date": "2026-06-13",
     "time": "14:34:48",
     "image": "images/IMG_6664.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 162,
+    "number": 160,
     "date": "2026-06-14",
     "time": "19:19:14",
     "image": "images/IMG_6678.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 163,
+    "number": 161,
     "date": "2026-06-15",
     "time": "09:45:23",
     "image": "images/IMG_6696.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 164,
+    "number": 162,
     "date": "2026-06-17",
     "time": "15:48:09",
     "image": "images/IMG_6732.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 165,
+    "number": 163,
     "date": "2026-06-18",
     "time": "10:39:33",
     "image": "images/IMG_6760.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 166,
+    "number": 164,
     "date": "2026-06-19",
     "time": "19:12:32",
     "image": "images/IMG_6814.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 167,
+    "number": 165,
     "date": "2026-06-20",
     "time": "19:58:38",
     "image": "images/IMG_6837.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 168,
+    "number": 166,
     "date": "2026-06-22",
     "time": "10:26:57",
     "image": "images/IMG_6923.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 169,
+    "number": 167,
     "date": "2026-06-23",
     "time": "10:16:46",
     "image": "images/IMG_6943.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 170,
+    "number": 168,
     "date": "2026-06-24",
     "time": "13:31:16",
     "image": "images/IMG_6956.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 171,
+    "number": 169,
     "date": "2026-06-25",
     "time": "09:59:39",
     "image": "images/IMG_6971.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 172,
+    "number": 170,
     "date": "2026-06-26",
     "time": "12:46:47",
     "image": "images/IMG_7002.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 173,
+    "number": 171,
     "date": "2026-06-27",
     "time": "19:48:56",
     "image": "images/IMG_7044.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 174,
+    "number": 172,
     "date": "2026-06-28",
     "time": "12:51:22",
     "image": "images/IMG_7074.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 175,
+    "number": 173,
     "date": "2026-06-29",
     "time": "12:35:45",
     "image": "images/IMG_7095.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 176,
+    "number": 174,
     "date": "2026-06-30",
     "time": "16:57:28",
     "image": "images/IMG_7120.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 177,
+    "number": 175,
     "date": "2026-07-01",
     "time": "15:30:16",
     "image": "images/IMG_7143.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 178,
+    "number": 176,
     "date": "2026-07-02",
     "time": "08:26:56",
     "image": "images/IMG_7151.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 179,
+    "number": 177,
     "date": "2026-07-03",
     "time": "17:30:59",
     "image": "images/IMG_7188.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 180,
+    "number": 178,
     "date": "2026-07-04",
     "time": "07:00:42",
     "image": "images/IMG_7201.jpeg",
@@ -1264,38 +1250,38 @@
     "time": null,
     "image": "images/IMG_7230.jpeg",
     "dateSource": "inferred from filename sequence and missing calendar day",
-    "number": 181
+    "number": 179
   },
   {
-    "number": 182,
+    "number": 180,
     "date": "2026-07-06",
     "time": "14:42:24",
     "image": "images/IMG_7244.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 183,
+    "number": 181,
     "date": "2026-07-07",
     "time": "11:48:32",
     "image": "images/IMG_7260.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 184,
+    "number": 182,
     "date": "2026-07-08",
     "time": "11:33:36",
     "image": "images/IMG_7284.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 185,
+    "number": 183,
     "date": "2026-07-09",
     "time": "08:32:18",
     "image": "images/IMG_7315.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 186,
+    "number": 184,
     "date": "2026-07-10",
     "time": "08:11:47",
     "image": "images/IMG_7353.jpeg",
@@ -1306,59 +1292,59 @@
     "time": null,
     "image": "images/IMG_7386.jpeg",
     "dateSource": "inferred from filename sequence",
-    "number": 187
+    "number": 185
   },
   {
     "date": "2026-07-12",
     "time": null,
     "image": "images/IMG_7414.jpeg",
     "dateSource": "inferred from filename sequence",
-    "number": 188
+    "number": 186
   },
   {
     "date": "2026-07-13",
     "time": null,
     "image": "images/IMG_7495.jpeg",
     "dateSource": "inferred from filename sequence",
-    "number": 189
+    "number": 187
   },
   {
     "date": "2026-07-14",
     "time": null,
     "image": "images/IMG_7511.jpeg",
     "dateSource": "inferred from filename sequence",
-    "number": 190
+    "number": 188
   },
   {
     "date": "2026-07-15",
     "time": null,
     "image": "images/IMG_7531.jpeg",
     "dateSource": "inferred from filename sequence",
-    "number": 191
+    "number": 189
   },
   {
     "date": "2026-07-16",
     "time": null,
     "image": "images/IMG_7550.jpeg",
     "dateSource": "inferred from filename sequence",
-    "number": 192
+    "number": 190
   },
   {
     "date": "2026-07-17",
     "time": null,
     "image": "images/IMG_7587.jpeg",
     "dateSource": "inferred from filename sequence",
-    "number": 193
+    "number": 191
   },
   {
     "date": "2026-07-19",
     "time": null,
     "image": "images/IMG_7606.jpeg",
     "dateSource": "user confirmed",
-    "number": 194
+    "number": 192
   },
   {
-    "number": 195,
+    "number": 193,
     "date": null,
     "time": null,
     "image": "images/IMG_6328.jpeg",
