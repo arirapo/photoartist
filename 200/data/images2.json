@@ -1260,42 +1260,105 @@
     "dateSource": "DateTime"
   },
   {
-    "number": 181,
+    "date": "2026-07-05",
+    "time": null,
+    "image": "images/IMG_7230.jpeg",
+    "dateSource": "inferred from filename sequence and missing calendar day",
+    "number": 181
+  },
+  {
+    "number": 182,
     "date": "2026-07-06",
     "time": "14:42:24",
     "image": "images/IMG_7244.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 182,
+    "number": 183,
     "date": "2026-07-07",
     "time": "11:48:32",
     "image": "images/IMG_7260.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 183,
+    "number": 184,
     "date": "2026-07-08",
     "time": "11:33:36",
     "image": "images/IMG_7284.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 184,
+    "number": 185,
     "date": "2026-07-09",
     "time": "08:32:18",
     "image": "images/IMG_7315.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 185,
+    "number": 186,
     "date": "2026-07-10",
     "time": "08:11:47",
     "image": "images/IMG_7353.jpeg",
     "dateSource": "DateTime"
   },
   {
-    "number": 186,
+    "date": "2026-07-11",
+    "time": null,
+    "image": "images/IMG_7386.jpeg",
+    "dateSource": "inferred from filename sequence",
+    "number": 187
+  },
+  {
+    "date": "2026-07-12",
+    "time": null,
+    "image": "images/IMG_7414.jpeg",
+    "dateSource": "inferred from filename sequence",
+    "number": 188
+  },
+  {
+    "date": "2026-07-13",
+    "time": null,
+    "image": "images/IMG_7495.jpeg",
+    "dateSource": "inferred from filename sequence",
+    "number": 189
+  },
+  {
+    "date": "2026-07-14",
+    "time": null,
+    "image": "images/IMG_7511.jpeg",
+    "dateSource": "inferred from filename sequence",
+    "number": 190
+  },
+  {
+    "date": "2026-07-15",
+    "time": null,
+    "image": "images/IMG_7531.jpeg",
+    "dateSource": "inferred from filename sequence",
+    "number": 191
+  },
+  {
+    "date": "2026-07-16",
+    "time": null,
+    "image": "images/IMG_7550.jpeg",
+    "dateSource": "inferred from filename sequence",
+    "number": 192
+  },
+  {
+    "date": "2026-07-17",
+    "time": null,
+    "image": "images/IMG_7587.jpeg",
+    "dateSource": "inferred from filename sequence",
+    "number": 193
+  },
+  {
+    "date": "2026-07-19",
+    "time": null,
+    "image": "images/IMG_7606.jpeg",
+    "dateSource": "user confirmed",
+    "number": 194
+  },
+  {
+    "number": 195,
     "date": null,
     "time": null,
     "image": "images/IMG_6328.jpeg",
